@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturier Styl'Emoi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item.active { background: linear-gradient(to right, #f59e0b, #ea580c); }
+        .btn-primary { background: linear-gradient(to right, #f59e0b, #ea580c); }
+        .btn-primary:hover { background: linear-gradient(to right, #d97706, #dc2626); }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            @page { size: A4; margin: 15mm; }
+            .page-break { page-break-after: always; }
+        }
+        .logo-container { max-width: 200px; max-height: 80px; }
+        .logo-container img { max-width: 100%; max-height: 80px; object-fit: contain; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-stone-100 to-amber-50 min-h-screen">
+    <!-- Page de connexion -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-stone-800 mb-4">Facturier</h1>
+                <img id="login-logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAHhAjIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7y+G3w28I3/w68K3Nz4V0W4uZtKtZJZpdOhZ3YwqSzErkkkkkmuj/AOFV+Cv+hQ0H/wAFkH/xNHwr/wCSYeEP+wPZ/wDohK6iuzF4zErE1EqkvifV9ycPh6Lowbgtl0XY5f8A4VX4K/6FDQf/AAWQf/E0f8Kr8Ff9ChoP/gsg/wDia6iij65if+fsvvYfV6P8i+5HL/8ACq/BX/QoaD/4LIP/AImj/hVfgr/oUNB/8FkH/wATXUUUfXMT/wA/Zfew+r0f5F9yOX/4VX4K/wChQ0H/AMFkH/xNH/Cq/BX/AEKGg/8Agsg/+JrqKKPrmJ/5+y+9h9Xo/wAi+5HL/wDCq/BX/QoaD/4LIP8A4mj/AIVX4K/6FDQf/BZB/wDE11FFH1zE/wDP2X3sPq9H+Rfcjl/+FV+Cv+hQ0H/wWQf/ABNH/Cq/BX/QoaD/AOCyD/4muooo+uYn/n7L72H1ej/IvuRy/wDwqvwV/wBChoP/AILIP/iaP+FV+Cv+hQ0H/wAFkH/xNdRRR9cxP/P2X3sPq9H+Rfcjl/8AhVfgr/oUNB/8FkH/AMTR/wAKr8Ff9ChoP/gsg/8Aia6iij65if8An7L72H1ej/IvuRy//Cq/BX/QoaD/AOCyD/4mj/hVfgr/AKFDQf8AwWQf/E11FFH1zE/8/Zfew+r0f5F9yOX/AOFV+Cv+hQ0H/wAFkH/xNH/Cq/BX/QoaD/4LIP8A4muooo+uYn/n7L72H1ej/IvuRy//AAqvwV/0KGg/+CyD/wCJo/4VX4K/6FDQf/BZB/8AE11FFH1zE/8AP2X3sPq9H+Rfcjl/+FV+Cv8AoUNB/wDBZB/8TR/wqvwV/wBChoP/AILIP/ia6iij65if+fsvvYfV6P8AIvuRy/8AwqvwV/0KGg/+CyD/AOJoPwr8Ff8AQn6D/wCCyD/4muooo+uYn/n7L72H1ej/ACL7kcv/AMKr8Ff9ChoP/gsg/wDiaP8AhVfgr/oUNB/8FkH/AMTXUEZo+uYn/n7L72H1ej/IvuRy/wDwqvwV/wBChoP/AILIP/iaP+FV+Cv+hQ0H/wAFkH/xNdQOaKPrmJ/5+y+9h9Xo/wAi+5HL/wDCq/BX/QoaD/4LIP8A4mj/AIVX4K/6FDQf/BZB/wDE11FFH1zE/wDP2X3sPq9H+Rfcjl/+FV+Cv+hQ0H/wWQf/ABNH/Cq/BX/QoaD/AOCyD/4muooo+uYn/n7L72H1ej/IvuRy/wDwqvwV/wBChoP/AILIP/iaP+FV+Cv+hQ0H/wAFkH/xNdRRR9cxP/P2X3sPq9H+Rfcjl/8AhVfgr/oUNB/8FkH/AMTR/wAKr8Ff9ChoP/gsg/8Aia6iij65if8An7L72H1ej/IvuRy//Cq/BX/QoaD/AOCyD/4mj/hVfgr/AKFDQf8AwWQf/E11FFH1zE/8/Zfew+r0f5F9yOX/AOFV+Cv+hQ0H/wAFkH/xNH/Cq/BX/QoaD/4LIP8A4muooo+uYn/n7L72H1ej/IvuRy//AAqvwV/0KGg/+CyD/wCJo/4VX4K/6FDQf/BZB/8AE11FFH1zE/8AP2X3sPq9H+Rfcjl/+FV+Cv8AoUNB/wDBZB/8TR/wqvwV/wBChoP/AILIP/ia6iij65if+fsvvYfV6P8AIvuRy/8AwqvwV/0KGg/+CyD/AOJo/wCFV+Cv+hQ0H/wWQf8AxNdRRR9cxP8Az9l97D6vR/kX3I5f/hVfgr/oUNB/8FkH/wATR/wqvwV/0KGg/wDgsg/+JrqKKPrmJ/5+y+9h9Xo/yL7kcv8A8Kr8Ff8AQoaD/wCCyD/4mj/hVfgr/oUNB/8ABZB/8TXUUUfXMT/z9l97D6vR/kX3I5c/CvwUP+ZQ0H/wWQf/ABNH/Cq/BX/QoaD/AOCyD/4muooo+uYn/n7L72H1ej/IvuRy/wDwqvwV/wBChoP/AILIP/iaP+FV+Cv+hQ0H/wAFkH/xNdRRR9cxP/P2X3sPq9H+Rfcjl/8AhVfgr/oUNB/8FkH/AMTR/wAKr8Ff9ChoP/gsg/8Aia6iij65if8An7L72H1ej/IvuRy//Cq/BX/QoaD/AOCyD/4mj/hVfgr/AKFDQf8AwWQf/E11FFH1zE/8/Zfew+r0f5F9yOX/AOFV+Cv+hQ0H/wAFkH/xNH/Cq/BX/QoaD/4LIP8A4muooo+uYn/n7L72H1ej/IvuRy//AAqvwV/0KGg/+CyD/wCJo/4VX4K/6FDQf/BZB/8AE11FFH1zE/8AP2X3sPq9H+Rfcjl/+FV+Cv8AoUNB/wDBZB/8TR/wqvwV/wBChoP/AILIP/ia6iij65if+fsvvYfV6P8AIvuRy/8AwqvwV/0KGg/+CyD/AOJo/wCFV+Cv+hQ0H/wWQf8AxNdRRR9cxP8Az9l97D6vR/kX3I5f/hVfgr/oUNB/8FkH/wATRXUUUfXMT/z9l97D6vR/kX3I5f4V/wDJMPCH/YHs/wD0QldRXL/Cv/kmHhD/ALA9n/6ISuorsxn+81f8T/M58P8AwYei/IKKKK4zoCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigDl/hX/AMkw8If9gez/APRCV1Fcv8K/+SYeEP8AsD2f/ohK6iuzGf7zV/xP8znw/wDBh6L8gooorjOgKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOX+Ff8AyTDwh/2B7P8A9EJXUVy/wr/5Jh4Q/wCwPZ/+iErqK7MZ/vNX/E/zOfD/AMGHovyCiiiuM6AooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA5f4V/wDJMPCH/YHs/wD0QldRXL/Cv/kmHhD/ALA9n/6ISuorsxn+81f8T/M58P8AwYei/IKKKK4zoCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/2Q==" 
+                     alt="Logo Styl'Emoi" class="mx-auto max-w-xs rounded-lg shadow-md">
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500" placeholder="Entrez le mot de passe" onkeypress="if(event.key==='Enter')login()">
+                </div>
+                <p id="login-error" class="text-red-500 text-sm hidden">Mot de passe incorrect</p>
+                <button onclick="login()" class="w-full btn-primary text-white py-3 rounded-xl font-semibold text-lg">
+                    Connexion
+                </button>
+            </div>
+            <p class="text-center text-stone-400 text-xs mt-4">© 2024 Styl'Emoi</p>
+        </div>
+    </div>
+
+    <!-- Application principale (cachée par défaut) -->
+    <div id="app" class="flex min-h-screen hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gradient-to-b from-stone-900 to-stone-800 text-white flex flex-col min-h-screen no-print">
+            <div class="p-6 border-b border-stone-700">
+                <div id="sidebar-logo" class="logo-container cursor-pointer" onclick="navigateTo('settings')" title="Cliquez pour changer le logo">
+                    <!-- Logo ou texte par défaut -->
+                </div>
+                <p class="text-stone-400 text-sm mt-1" id="version-display">v3.2.0</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-1" id="nav-menu"></nav>
+            <div class="p-4 border-t border-stone-700">
+                <button onclick="logout()" class="w-full text-left text-stone-400 hover:text-white text-sm flex items-center gap-2">
+                    🚪 Déconnexion
+                </button>
+            </div>
+            <div class="p-4 border-t border-stone-700 text-stone-400 text-xs">© 2024 Styl'Emoi</div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-auto" id="main-content"></main>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"></div>
+    </div>
+
+    <!-- Zone d'impression cachée -->
+    <div id="print-area" class="hidden print:block"></div>
+
+<script>
+// ============================================
+// CONFIGURATION FIREBASE (À COMPLÉTER)
+// ============================================
+const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
+};
+
+// Initialisation Firebase (uniquement si configuré)
+let db = null;
+if (firebaseConfig.apiKey) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+}
+
+// ============================================
+// FONCTIONS DE CONNEXION
+// ============================================
+function login() {
+    const password = document.getElementById('login-password').value;
+    const storedData = localStorage.getItem('facturier_stylemoi');
+    let adminPassword = 'admin123'; // Mot de passe par défaut
+    
+    if (storedData) {
+        try {
+            const parsed = JSON.parse(storedData);
+            if (parsed.adminPassword) adminPassword = parsed.adminPassword;
+        } catch(e) {}
+    }
+    
+    if (password === adminPassword) {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        sessionStorage.setItem('facturier_logged', 'true');
+        document.getElementById('login-error').classList.add('hidden');
+        init();
+    } else {
+        document.getElementById('login-error').classList.remove('hidden');
+        document.getElementById('login-password').value = '';
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem('facturier_logged');
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('login-page').classList.remove('hidden');
+    document.getElementById('login-password').value = '';
+}
+
+function checkSession() {
+    if (sessionStorage.getItem('facturier_logged') === 'true') {
+        document.getElementById('login-page').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        init();
+    }
+}
+
+// Vérifier la session au chargement
+document.addEventListener('DOMContentLoaded', checkSession);
+
+// ============================================
+// DONNÉES PAR DÉFAUT
+// ============================================
+const defaultData = {
+    version: '3.2.0',
+    adminPassword: 'admin123',
+    logo: null, // Base64 du logo
+    firebase: null, // Configuration Firebase
+    cgv: `CONDITIONS GÉNÉRALES DE VENTE
+
+1. OBJET
+Les présentes conditions générales de vente s'appliquent à toutes les ventes conclues par Styl'Emoi.
+
+2. PRIX
+Les prix sont indiqués en euros. TVA non applicable, article 293B du CGI.
+
+3. PAIEMENT
+Le paiement est exigible à la commande ou selon les modalités convenues.
+
+4. LIVRAISON
+Les délais de livraison sont donnés à titre indicatif.
+
+5. RÉCLAMATIONS
+Toute réclamation doit être formulée dans un délai de 7 jours suivant la livraison.
+
+6. DROIT DE RÉTRACTATION
+Conformément à la loi, le client dispose d'un délai de 14 jours pour exercer son droit de rétractation. Les produits personnalisés ne peuvent faire l'objet d'un retour.
+
+7. GARANTIE
+Nos produits bénéficient de la garantie légale de conformité.
+
+8. DONNÉES PERSONNELLES
+Les données collectées sont utilisées uniquement pour le traitement des commandes.
+
+9. LITIGES
+En cas de litige, une solution amiable sera recherchée. À défaut, les tribunaux de Strasbourg seront compétents.`,
+    entreprise: {
+        nom: "Styl'Emoi",
+        complement: 'Entrepreneur individuel',
+        adresse: '6G Rue de la Mésange',
+        codePostal: '67110',
+        ville: 'NIEDERBRONN-LES-BAINS',
+        telephone: '06 71 66 81 02',
+        email: 'contact@stylemoi.fr',
+        siret: '933 150 773 000 10',
+        rcs: 'RCS Strasbourg 933 150 773 Code APE 4791A',
+        iban: 'FR76 10 27 8017 8000 0206 0130 132',
+        bic: 'CMCIFR2A',
+        exonereTVA: true
+    },
+    // Taux URSSAF par mois (clé: YYYY-MM, valeur: taux)
+    tauxURSSAFParMois: {
+        'default': 23.20
+    },
+    tauxTVA: [0, 5.5, 10, 20],
+    moyensReglement: ['chèque', 'virement', 'carte bancaire', 'espèces', 'paypal', 'CB', 'à définir'],
+    categories: [
+        { id: 'tasses', nom: 'Tasses', icon: '☕' },
+        { id: 'gourdes', nom: 'Gourdes', icon: '🍶' },
+        { id: 'verres', nom: 'Verres', icon: '🥛' },
+        { id: 'ardoises', nom: 'Ardoises', icon: '🪨' },
+        { id: 'panneaux', nom: 'Panneaux', icon: '🖼️' },
+        { id: 'cuisine', nom: 'Cuisine', icon: '🍳' },
+        { id: 'tabliers', nom: 'Tabliers', icon: '👔' },
+        { id: 'boites', nom: 'Boîtes', icon: '📦' },
+        { id: 'accessoires', nom: 'Accessoires', icon: '🎁' },
+        { id: 'coussins', nom: 'Coussins', icon: '🛋️' },
+        { id: 'tshirts', nom: 'T-shirts', icon: '👕' },
+        { id: 'bebe', nom: 'Bébé', icon: '👶' },
+        { id: 'serviettes', nom: 'Serviettes', icon: '🛁' },
+        { id: 'divers', nom: 'Divers', icon: '📋' }
+    ],
+    clients: [
+        { numero: 'C00001', type: 'Professionnel', nom: 'WALTER Patrice', adresse: '3 rue des Hirondelles', codePostal: '67110', ville: 'GUNDERSHOFFEN', telephone: '', portable: '06 37 70 37 31', email: 'walterpatrice67@gmail.com' },
+        { numero: 'C00002', type: 'Particulier', nom: 'CHRISTMANN Corine', adresse: '19 route de Philippsbourg', codePostal: '67110', ville: 'Neunhoffen', telephone: '', portable: '06 85 68 72 96', email: '' },
+        { numero: 'C00003', type: 'Particulier', nom: 'RAKOTOSALAMA Rojo', adresse: '20 rue de Lobsann', codePostal: '67250', ville: 'Soultz-sous-Forêts', telephone: '', portable: '648865782', email: 'rojorakotosalama@yahoo.fr' },
+        { numero: 'C00004', type: 'Particulier', nom: 'Ferri Céline', adresse: '19 rue sœur Marie', codePostal: '67500', ville: 'Weitbruch', telephone: '', portable: '622005989', email: '' },
+        { numero: 'C00005', type: 'Particulier', nom: 'Wingert Leslie', adresse: '5 rue de la Rotlach', codePostal: '67850', ville: 'Herrlisheim', telephone: '', portable: '', email: '' },
+        { numero: 'C00006', type: 'Particulier', nom: 'Schmitt Audrey', adresse: '1 passage du Murin', codePostal: '67500', ville: 'Haguenau', telephone: '', portable: '614145487', email: '' },
+        { numero: 'C00007', type: 'Particulier', nom: 'Waechter Andrée', adresse: '7 rue de la Sablonière', codePostal: '67110', ville: 'Reichshoffen', telephone: '', portable: '786493984', email: '' },
+        { numero: 'C00008', type: 'Particulier', nom: 'Brunner Emmanuelle', adresse: '42 rue des roseaux', codePostal: '67590', ville: 'Schweighouse-sur-Moder', telephone: '', portable: '671815064', email: '' },
+        { numero: 'C00009', type: 'Particulier', nom: 'Weibel Joelle', adresse: '7 IMPASSES DES JARDINS', codePostal: '67590', ville: 'OHLUNGEN', telephone: '', portable: '626102755', email: '' },
+        { numero: 'C00010', type: 'Particulier', nom: 'GITZ MORGANE', adresse: '91 RUE PRINCIPALE', codePostal: '67590', ville: 'OHLUNGEN', telephone: '', portable: '620951401', email: '' },
+        { numero: 'C00011', type: 'Particulier', nom: 'Restaurant les Cordons Bleus', adresse: '20 rue Principale', codePostal: '67250', ville: 'Lobsann', telephone: '', portable: '624185568', email: '' },
+        { numero: 'C00012', type: 'Particulier', nom: 'CHRISTMANN DELPHINE', adresse: '18 CITE NAPOLEON', codePostal: '67660', ville: 'BETCHDORF', telephone: '', portable: '681615580', email: '' },
+        { numero: 'C00013', type: 'Particulier', nom: 'Virginie', adresse: '21 rue des vergers', codePostal: '68640', ville: 'Waldighoffen', telephone: '', portable: '683674047', email: 'Booggybooggy68@gmail.com' },
+        { numero: 'C00014', type: 'Particulier', nom: 'FROBERGER KERLEN GAELLE', adresse: '3 RUE DE LARGITZEN', codePostal: '68560', ville: 'Hirsingue', telephone: '', portable: '688813905', email: 'greg.gaelle51@hotmail.fr' },
+        { numero: 'C00015', type: 'Particulier', nom: 'Elodie', adresse: '', codePostal: '', ville: '', telephone: '', portable: '', email: '' },
+        { numero: 'C00016', type: 'Particulier', nom: 'Marion', adresse: '', codePostal: '', ville: '', telephone: '', portable: '', email: '' },
+        { numero: 'C00017', type: 'Particulier', nom: 'Association des cerfs solidaires', adresse: '', codePostal: '67360', ville: 'Langensoultzbach', telephone: '', portable: '', email: '' },
+        { numero: 'C00018', type: 'Particulier', nom: 'AAPPMA Gundershoffen', adresse: '', codePostal: '67110', ville: 'Gundershoffen', telephone: '', portable: '', email: '' },
+        { numero: 'C00019', type: 'Particulier', nom: 'hoernel antoine', adresse: '', codePostal: '67110', ville: 'Gundershoffen', telephone: '', portable: '', email: '' },
+        { numero: 'C00020', type: 'Particulier', nom: 'CSE fonderie de Niederbronn', adresse: '', codePostal: '67110', ville: 'Niederbronn les bains', telephone: '', portable: '', email: 'Georges.VOLTZ@fonderiedeniederbronn.com' },
+        { numero: 'C00021', type: 'Particulier', nom: 'weiss maria', adresse: '', codePostal: '', ville: 'sessenheim', telephone: '', portable: '', email: '' },
+        { numero: 'C00022', type: 'Particulier', nom: 'CANARELLI CELINE', adresse: '', codePostal: '44320', ville: 'CHAUMES EN RETZ', telephone: '', portable: '', email: '' },
+        { numero: 'C00023', type: 'Particulier', nom: 'Klein Fabienne', adresse: '', codePostal: '67110', ville: 'Reichshoffen', telephone: '', portable: '', email: '' },
+    ],
+    produits: [
+        // TASSES - T001 à T018
+        { reference: 'T001', description: 'Tasse blanche céramique', prixHT: 12.00, tauxTVA: 0, coutAchat: 1.32, marge: 8.09, categorie: 'tasses' },
+        { reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.00, tauxTVA: 0, coutAchat: 3.62, marge: 3.15, categorie: 'tasses' },
+        { reference: 'T003', description: 'Tasse inox 400 ml personnalisée', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.05, marge: 1.97, categorie: 'tasses' },
+        { reference: 'T004', description: 'Tasse plastique', prixHT: 0, tauxTVA: 0, coutAchat: 3.09, marge: 0, categorie: 'tasses' },
+        { reference: 'T005', description: 'Tasse conique', prixHT: 0, tauxTVA: 0, coutAchat: 3.64, marge: 0, categorie: 'tasses' },
+        { reference: 'T006', description: 'Tasse Waouh', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.44, marge: 5.15, categorie: 'tasses' },
+        { reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'tasses' },
+        { reference: 'T008', description: 'Tasse en verre jaune', prixHT: 15.00, tauxTVA: 0, coutAchat: 3.37, marge: 3.45, categorie: 'tasses' },
+        { reference: 'T009', description: 'Tasse en verre violet', prixHT: 15.00, tauxTVA: 0, coutAchat: 3.37, marge: 3.45, categorie: 'tasses' },
+        { reference: 'T010', description: 'Tasse en verre bleu', prixHT: 15.00, tauxTVA: 0, coutAchat: 3.37, marge: 3.45, categorie: 'tasses' },
+        { reference: 'T011', description: 'Tasse paillette gris bleu', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.98, marge: 4.04, categorie: 'tasses' },
+        { reference: 'T012', description: 'Tasse paillette gris rose', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.87, marge: 4.23, categorie: 'tasses' },
+        { reference: 'T013', description: 'Tasse paillette gris jaune', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.87, marge: 4.23, categorie: 'tasses' },
+        { reference: 'T014', description: 'Tasse paillette rose jaune', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.98, marge: 4.04, categorie: 'tasses' },
+        { reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.00, tauxTVA: 0, coutAchat: 2.98, marge: 4.04, categorie: 'tasses' },
+        { reference: 'T016', description: 'Mug thermos Inox 470 ml', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.40, marge: 1.38, categorie: 'tasses' },
+        { reference: 'T017', description: 'Mug thermos Inox 390ml', prixHT: 1.00, tauxTVA: 0, coutAchat: 6.66, marge: 0, categorie: 'tasses' },
+        { reference: 'T018', description: 'Boite pour tasse en céramique', prixHT: 1.00, tauxTVA: 0, coutAchat: 1.00, marge: 0, categorie: 'tasses' },
+        { reference: 'T019', description: 'Choppe à bière 500ML', prixHT: 18.00, tauxTVA: 0, coutAchat: 4.80, marge: 2.75, categorie: 'tasses' },
+        { reference: 'T020', description: 'Bol en céramique petit', prixHT: 20.00, tauxTVA: 0, coutAchat: 6.16, marge: 2.25, categorie: 'tasses' },
+        { reference: 'T021', description: 'Bol céréales céramique', prixHT: 18.00, tauxTVA: 0, coutAchat: 5.83, marge: 2.09, categorie: 'tasses' },
+        // GOURDES - G001 à G014
+        { reference: 'G001', description: 'Gourde Iso inox 500ML Blanche', prixHT: 18.00, tauxTVA: 0, coutAchat: 7.54, marge: 1.39, categorie: 'gourdes' },
+        { reference: 'G002', description: 'Gourde Iso inox 500ML violet', prixHT: 18.00, tauxTVA: 0, coutAchat: 8.01, marge: 1.25, categorie: 'gourdes' },
+        { reference: 'G003', description: 'Gourde Iso inox 500ML rose/blanc', prixHT: 18.00, tauxTVA: 0, coutAchat: 8.01, marge: 1.25, categorie: 'gourdes' },
+        { reference: 'G004', description: 'Gourde Iso inox 500ML bleu/vert', prixHT: 18.00, tauxTVA: 0, coutAchat: 8.01, marge: 1.25, categorie: 'gourdes' },
+        { reference: 'G005', description: 'Gourde sport Alu Gris 500ML', prixHT: 13.00, tauxTVA: 0, coutAchat: 4.27, marge: 2.05, categorie: 'gourdes' },
+        { reference: 'G006', description: 'Gourde sport Alu Blanc 500ML', prixHT: 13.00, tauxTVA: 0, coutAchat: 4.27, marge: 2.05, categorie: 'gourdes' },
+        { reference: 'G007', description: 'Bouteille iso inox Blanc/Gris 750ML', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.26, marge: 1.42, categorie: 'gourdes' },
+        { reference: 'G008', description: 'Bouteille iso inox Gris 750ML', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.26, marge: 1.42, categorie: 'gourdes' },
+        { reference: 'G009', description: 'Bouteille iso inox Blanc 750ML', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.26, marge: 1.42, categorie: 'gourdes' },
+        { reference: 'G010', description: 'Thermos Inox 750ML Gris+Gobelet', prixHT: 22.00, tauxTVA: 0, coutAchat: 10.31, marge: 1.13, categorie: 'gourdes' },
+        { reference: 'G011', description: 'Thermos Inox 750ML Blanc+Gobelet', prixHT: 22.00, tauxTVA: 0, coutAchat: 10.31, marge: 1.13, categorie: 'gourdes' },
+        { reference: 'G012', description: 'Cannette iso inox 380Ml', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.25, marge: 1.42, categorie: 'gourdes' },
+        { reference: 'G013', description: 'Gobelet cannette subli', prixHT: 18.00, tauxTVA: 0, coutAchat: 7.50, marge: 1.40, categorie: 'gourdes' },
+        // VERRES - V001 à V004
+        { reference: 'V001', description: 'Verre cannette avec paille givré', prixHT: 20.00, tauxTVA: 0, coutAchat: 10.00, marge: 1.00, categorie: 'verres' },
+        { reference: 'V002', description: 'Verre cannette avec paille bleu', prixHT: 20.00, tauxTVA: 0, coutAchat: 10.00, marge: 1.00, categorie: 'verres' },
+        { reference: 'V003', description: 'Verre cannette avec paille vert', prixHT: 20.00, tauxTVA: 0, coutAchat: 10.00, marge: 1.00, categorie: 'verres' },
+        { reference: 'V004', description: 'Verre cannette avec paille transparent', prixHT: 18.00, tauxTVA: 0, coutAchat: 8.00, marge: 1.25, categorie: 'verres' },
+        // ARDOISES - A001 à A009
+        { reference: 'A001', description: 'Ardoise carrée 15x15', prixHT: 15.00, tauxTVA: 0, coutAchat: 4.94, marge: 2.04, categorie: 'ardoises' },
+        { reference: 'A002', description: 'Ardoise carrée 20x20', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.20, marge: 1.44, categorie: 'ardoises' },
+        { reference: 'A003', description: 'Ardoise carrée 30x30', prixHT: 30.00, tauxTVA: 0, coutAchat: 9.89, marge: 2.03, categorie: 'ardoises' },
+        { reference: 'A004', description: 'Ardoise rectangulaire 20x30', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.20, marge: 1.44, categorie: 'ardoises' },
+        { reference: 'A005', description: 'Ardoise rectangulaire 15x20', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.53, marge: 1.71, categorie: 'ardoises' },
+        { reference: 'A006', description: 'Ardoise cœur', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.35, marge: 1.40, categorie: 'ardoises' },
+        { reference: 'A007', description: 'Ardoise croix', prixHT: 20.00, tauxTVA: 0, coutAchat: 8.35, marge: 1.40, categorie: 'ardoises' },
+        { reference: 'A008', description: 'Ardoise ovale', prixHT: 18.00, tauxTVA: 0, coutAchat: 6.90, marge: 1.61, categorie: 'ardoises' },
+        { reference: 'A009', description: 'Ardoise horloge', prixHT: 40.00, tauxTVA: 0, coutAchat: 15.90, marge: 1.52, categorie: 'ardoises' },
+        // BOITES - BO001 à BO005
+        { reference: 'BO001', description: 'Boîte à gouter Bleu Clair', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.34, marge: 1.81, categorie: 'boites' },
+        { reference: 'BO002', description: 'Boîte à gouter Bleu foncé', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.34, marge: 1.81, categorie: 'boites' },
+        { reference: 'BO003', description: 'Boîte à gouter Vert', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.34, marge: 1.81, categorie: 'boites' },
+        { reference: 'BO004', description: 'Boîte à gouter Rose', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.34, marge: 1.81, categorie: 'boites' },
+        { reference: 'BO005', description: 'Boîte à gouter Rouge', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.34, marge: 1.81, categorie: 'boites' },
+        // PANNEAUX - PA001 à PA011
+        { reference: 'PA001', description: 'Panneau acrylique 100x150', prixHT: 8.00, tauxTVA: 0, coutAchat: 2.38, marge: 2.36, categorie: 'panneaux' },
+        { reference: 'PA002', description: 'Panneau acrylique 150x200', prixHT: 10.00, tauxTVA: 0, coutAchat: 4.65, marge: 1.15, categorie: 'panneaux' },
+        { reference: 'PA003', description: 'Panneau acrylique 150x300', prixHT: 15.00, tauxTVA: 0, coutAchat: 6.66, marge: 1.25, categorie: 'panneaux' },
+        { reference: 'PA004', description: 'Panneau acrylique 200x250', prixHT: 18.00, tauxTVA: 0, coutAchat: 7.38, marge: 1.44, categorie: 'panneaux' },
+        { reference: 'PA005', description: 'Panneau acrylique 200x300', prixHT: 22.00, tauxTVA: 0, coutAchat: 10.25, marge: 1.15, categorie: 'panneaux' },
+        { reference: 'PA006', description: 'Panneau acrylique 100x200', prixHT: 8.50, tauxTVA: 0, coutAchat: 3.56, marge: 1.39, categorie: 'panneaux' },
+        { reference: 'PA007', description: 'Plaque photo Alu 12,5x17,5', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'panneaux' },
+        { reference: 'PA008', description: 'Panneau en verre 178x127', prixHT: 15.00, tauxTVA: 0, coutAchat: 6.80, marge: 1.21, categorie: 'panneaux' },
+        { reference: 'PA009', description: 'Panneau en verre 127x178', prixHT: 15.00, tauxTVA: 0, coutAchat: 6.80, marge: 1.21, categorie: 'panneaux' },
+        { reference: 'PA010', description: 'Panneau en verre 250x203', prixHT: 20.00, tauxTVA: 0, coutAchat: 9.88, marge: 1.02, categorie: 'panneaux' },
+        { reference: 'PA011', description: 'Panneau en verre 203x250', prixHT: 20.00, tauxTVA: 0, coutAchat: 9.88, marge: 1.02, categorie: 'panneaux' },
+        // CUISINE - CU001 à CU008
+        { reference: 'CU001', description: 'Gant cuisine', prixHT: 6.00, tauxTVA: 0, coutAchat: 2.91, marge: 1.06, categorie: 'cuisine' },
+        { reference: 'CU002', description: 'Manique cuisine', prixHT: 6.00, tauxTVA: 0, coutAchat: 2.91, marge: 1.06, categorie: 'cuisine' },
+        { reference: 'CU003', description: 'Planche à découper polymère 235x140', prixHT: 12.50, tauxTVA: 0, coutAchat: 4.36, marge: 1.87, categorie: 'cuisine' },
+        { reference: 'CU004', description: 'Planche à découper polymère 200x250', prixHT: 15.00, tauxTVA: 0, coutAchat: 5.60, marge: 1.68, categorie: 'cuisine' },
+        { reference: 'CU005', description: 'Planche à découper verre ronde 300', prixHT: 7.77, tauxTVA: 0, coutAchat: 7.77, marge: 0, categorie: 'cuisine' },
+        { reference: 'CU006', description: 'Planche à découper verre 285x391', prixHT: 7.60, tauxTVA: 0, coutAchat: 7.60, marge: 0, categorie: 'cuisine' },
+        { reference: 'CU007', description: 'Planche à découper verre 200x285', prixHT: 5.86, tauxTVA: 0, coutAchat: 5.86, marge: 0, categorie: 'cuisine' },
+        { reference: 'CU008', description: 'Carrelage en verre 152x152', prixHT: 2.35, tauxTVA: 0, coutAchat: 2.35, marge: 0, categorie: 'cuisine' },
+        // TABLIERS - TA001 à TA004
+        { reference: 'TA001', description: 'Tablier Enfant 360x510', prixHT: 2.37, tauxTVA: 0, coutAchat: 2.37, marge: 0, categorie: 'tabliers' },
+        { reference: 'TA002', description: 'Tablier Enfant 480x650', prixHT: 2.74, tauxTVA: 0, coutAchat: 2.74, marge: 0, categorie: 'tabliers' },
+        { reference: 'TA003', description: 'Tablier Adulte 600x850', prixHT: 4.90, tauxTVA: 0, coutAchat: 4.90, marge: 0, categorie: 'tabliers' },
+        { reference: 'TA004', description: 'Tablier Adulte 700x950', prixHT: 6.15, tauxTVA: 0, coutAchat: 6.15, marge: 0, categorie: 'tabliers' },
+        // ACCESSOIRES - AC001 à AC019
+        { reference: 'AC001', description: 'Badge Aimanté 75x50mm', prixHT: 1.07, tauxTVA: 0, coutAchat: 1.07, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC002', description: 'Magnet Cœur', prixHT: 2.18, tauxTVA: 0, coutAchat: 2.18, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC003', description: 'Tapis de souris', prixHT: 8.00, tauxTVA: 0, coutAchat: 1.60, marge: 4.00, categorie: 'accessoires' },
+        { reference: 'AC004', description: 'Zippo', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC005', description: 'Tirelire', prixHT: 10.00, tauxTVA: 0, coutAchat: 3.31, marge: 2.02, categorie: 'accessoires' },
+        { reference: 'AC006', description: 'Porte Carte Bois avec ou sans prénom', prixHT: 2.50, tauxTVA: 0, coutAchat: 2.50, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC007', description: 'Dessous de Verre sublimable', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC008', description: 'Lingettes Lunettes Sublimable', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC009', description: 'Décapsuleur Metal', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC010', description: 'Décapsuleur Bois', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC011', description: 'Marque page 95mm', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC012', description: 'Cabas tissus', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC013', description: 'Lampe sublimable', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC014', description: 'Horloge Mural sublimable', prixHT: 11.44, tauxTVA: 0, coutAchat: 11.44, marge: 0, categorie: 'accessoires' },
+        { reference: 'AC015', description: 'Puzzle', prixHT: 10.00, tauxTVA: 0, coutAchat: 3.50, marge: 1.86, categorie: 'accessoires' },
+        { reference: 'AC016', description: 'Pendentif os alu', prixHT: 5.00, tauxTVA: 0, coutAchat: 1.75, marge: 1.86, categorie: 'accessoires' },
+        // COUSSINS - CO001 à CO007
+        { reference: 'CO001', description: 'Coussin Coeur 40x44cm + housse sublimable', prixHT: 6.00, tauxTVA: 0, coutAchat: 6.00, marge: 0, categorie: 'coussins' },
+        { reference: 'CO002', description: 'Coussin carré 35x35cm + housse sublimable', prixHT: 4.91, tauxTVA: 0, coutAchat: 4.91, marge: 0, categorie: 'coussins' },
+        { reference: 'CO003', description: 'Coussin carré 40x40cm + housse sublimable', prixHT: 5.20, tauxTVA: 0, coutAchat: 5.20, marge: 0, categorie: 'coussins' },
+        { reference: 'CO004', description: 'Coussin carré 45x45cm + housse sublimable', prixHT: 6.68, tauxTVA: 0, coutAchat: 6.68, marge: 0, categorie: 'coussins' },
+        { reference: 'CO005', description: 'Coussin rectangulaire 80x40cm + housse sublimable', prixHT: 10.17, tauxTVA: 0, coutAchat: 10.17, marge: 0, categorie: 'coussins' },
+        { reference: 'CO006', description: 'Bouillotte + Housse', prixHT: 8.06, tauxTVA: 0, coutAchat: 8.06, marge: 0, categorie: 'coussins' },
+        // T-SHIRTS - TS001 à TS022
+        { reference: 'TS001', description: 'TSHIRT POLY BLEU TOUCHER COTON S-XL', prixHT: 10.08, tauxTVA: 0, coutAchat: 10.08, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS002', description: 'TSHIRT POLY BLEU TOUCHER COTON 2XL', prixHT: 11.22, tauxTVA: 0, coutAchat: 11.22, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS003', description: 'TSHIRT POLY BLEU TOUCHER COTON 3XL', prixHT: 11.82, tauxTVA: 0, coutAchat: 11.82, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS004', description: 'TSHIRT POLY GRIS TOUCHER COTON S-XL', prixHT: 10.08, tauxTVA: 0, coutAchat: 10.08, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS005', description: 'TSHIRT POLY GRIS TOUCHER COTON 2XL', prixHT: 11.22, tauxTVA: 0, coutAchat: 11.22, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS006', description: 'TSHIRT POLY GRIS TOUCHER COTON 3XL', prixHT: 11.82, tauxTVA: 0, coutAchat: 11.82, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS007', description: 'TSHIRT POLY BLANC TOUCHER COTON S-XL', prixHT: 10.08, tauxTVA: 0, coutAchat: 10.08, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS008', description: 'TSHIRT POLY BLANC TOUCHER COTON 2XL', prixHT: 11.22, tauxTVA: 0, coutAchat: 11.22, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS009', description: 'TSHIRT POLY BLANC TOUCHER COTON 3XL', prixHT: 11.82, tauxTVA: 0, coutAchat: 11.82, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS010', description: 'TSHIRT POLY VERT TOUCHER COTON S-XL', prixHT: 10.80, tauxTVA: 0, coutAchat: 10.80, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS011', description: 'TSHIRT POLY VERT TOUCHER COTON 2XL', prixHT: 11.22, tauxTVA: 0, coutAchat: 11.22, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS012', description: 'TSHIRT POLY VERT TOUCHER COTON 3XL', prixHT: 11.82, tauxTVA: 0, coutAchat: 11.82, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS013', description: 'TSHIRT POLY VERT TOUCHER COTON MIXTE S-XL', prixHT: 9.12, tauxTVA: 0, coutAchat: 9.12, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS014', description: 'TSHIRT POLY VERT TOUCHER COTON MIXTE 2XL', prixHT: 10.74, tauxTVA: 0, coutAchat: 10.74, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS015', description: 'TSHIRT POLY VERT TOUCHER COTON MIXTE 3XL', prixHT: 11.10, tauxTVA: 0, coutAchat: 11.10, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS016', description: 'TSHIRT POLY VERT TOUCHER COTON MIXTE 4XL', prixHT: 11.76, tauxTVA: 0, coutAchat: 11.76, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS017', description: 'TSHIRT POLY VERT TOUCHER COTON MIXTE 5XL', prixHT: 13.32, tauxTVA: 0, coutAchat: 13.32, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS018', description: 'TSHIRT POLY BLANC TOUCHER COTON ENFANT 2-16 ANS', prixHT: 7.62, tauxTVA: 0, coutAchat: 7.62, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS019', description: 'TSHIRT POLY COL V FEMME S-5XL', prixHT: 5.83, tauxTVA: 0, coutAchat: 5.83, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS020', description: 'TSHIRT POLY COL V HOMME S-5XL', prixHT: 5.83, tauxTVA: 0, coutAchat: 5.83, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS021', description: 'Tshirt rechange', prixHT: 0.96, tauxTVA: 0, coutAchat: 0.96, marge: 0, categorie: 'tshirts' },
+        { reference: 'TS022', description: 'Tshirt rechange 2xl', prixHT: 2.82, tauxTVA: 0, coutAchat: 2.82, marge: 0, categorie: 'tshirts' },
+        // BEBE - BE001 à BE012
+        { reference: 'BE001', description: 'Body Bébé Poly Ultra Doux', prixHT: 5.32, tauxTVA: 0, coutAchat: 5.32, marge: 0, categorie: 'bebe' },
+        { reference: 'BE002', description: 'Bavoir Blanc', prixHT: 3.10, tauxTVA: 0, coutAchat: 3.10, marge: 0, categorie: 'bebe' },
+        { reference: 'BE003', description: 'Doudou Mouton (xl)', prixHT: 5.48, tauxTVA: 0, coutAchat: 5.48, marge: 0, categorie: 'bebe' },
+        { reference: 'BE004', description: 'Doudou Girafe (l)', prixHT: 5.48, tauxTVA: 0, coutAchat: 5.48, marge: 0, categorie: 'bebe' },
+        { reference: 'BE005', description: 'Doudou Elephant (xl)', prixHT: 5.48, tauxTVA: 0, coutAchat: 5.48, marge: 0, categorie: 'bebe' },
+        { reference: 'BE006', description: 'Doudou Ours (l) 220mm', prixHT: 5.93, tauxTVA: 0, coutAchat: 5.93, marge: 0, categorie: 'bebe' },
+        { reference: 'BE007', description: 'Doudou ours Barney (m) 160mm', prixHT: 5.48, tauxTVA: 0, coutAchat: 5.48, marge: 0, categorie: 'bebe' },
+        { reference: 'BE008', description: 'Doudou Lapin xxl 500mm', prixHT: 34.44, tauxTVA: 0, coutAchat: 34.44, marge: 0, categorie: 'bebe' },
+        { reference: 'BE009', description: 'Doudou Lapin (m)', prixHT: 5.48, tauxTVA: 0, coutAchat: 5.48, marge: 0, categorie: 'bebe' },
+        // SERVIETTES - SE001 à SE002
+        { reference: 'SE001', description: 'Serviette de bain 50x100', prixHT: 6.40, tauxTVA: 0, coutAchat: 6.40, marge: 0, categorie: 'serviettes' },
+        { reference: 'SE002', description: 'Serviette de bain 70x141', prixHT: 11.95, tauxTVA: 0, coutAchat: 11.95, marge: 0, categorie: 'serviettes' },
+    ],
+    factures: [
+        { numero: 'F00001', clientId: 'C00002', date: '2024-10-23', dateEcheance: '2024-11-22', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
+        { numero: 'F00002', clientId: 'C00002', date: '2024-10-27', dateEcheance: '2024-11-26', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 2, tauxTVA: 0 }], totalHT: 30.0, totalTTC: 30.0 },
+        { numero: 'F00003', clientId: 'C00003', date: '2024-11-15', dateEcheance: '2024-12-15', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.0, quantite: 9, tauxTVA: 0 }], totalHT: 135.0, totalTTC: 135.0 },
+        { numero: 'F00004', clientId: 'C00004', date: '2024-11-24', dateEcheance: '2024-12-24', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.0, quantite: 4, tauxTVA: 0 }], totalHT: 60.0, totalTTC: 60.0 },
+        { numero: 'F00005', clientId: 'C00005', date: '2024-11-24', dateEcheance: '2024-12-24', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.0, quantite: 4, tauxTVA: 0 }, { id: 2, reference: 'A006', description: 'Ardoise cœur', prixHT: 20.0, quantite: 4, tauxTVA: 0 }], totalHT: 140.0, totalTTC: 140.0 },
+        { numero: 'F00006', clientId: 'C00006', date: '2024-12-04', dateEcheance: '2025-01-03', modeReglement: 'paypal', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'V001', description: 'Verre cannette avec paille givré', prixHT: 20.0, quantite: 1, tauxTVA: 0 }], totalHT: 20.0, totalTTC: 20.0 },
+        { numero: 'F00007', clientId: 'C00007', date: '2024-12-04', dateEcheance: '2025-01-03', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T006', description: 'Tasse Waouh', prixHT: 15.0, quantite: 2, tauxTVA: 0 }, { id: 2, reference: 'T008', description: 'Tasse en verre jaune', prixHT: 15.0, quantite: 1, tauxTVA: 0 }, { id: 3, reference: 'G006', description: 'Gourde sport Alu Blanc 500ML', prixHT: 13.0, quantite: 1, tauxTVA: 0 }], totalHT: 58.0, totalTTC: 58.0 },
+        { numero: 'F00008', clientId: 'C00008', date: '2024-12-04', dateEcheance: '2025-01-03', modeReglement: 'CB', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'G004', description: 'Gourde Iso inox 500ML bleu/vert', prixHT: 18.0, quantite: 1, tauxTVA: 0 }], totalHT: 18.0, totalTTC: 18.0 },
+        { numero: 'F00009', clientId: 'C00010', date: '2024-12-04', dateEcheance: '2025-01-03', modeReglement: 'CB', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T008', description: 'Tasse en verre jaune', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
+        { numero: 'F00010', clientId: 'C00011', date: '2024-12-05', dateEcheance: '2025-01-04', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T014', description: 'Tasse paillette rose jaune', prixHT: 15.0, quantite: 3, tauxTVA: 0 }, { id: 2, reference: 'A007', description: 'Ardoise croix', prixHT: 20.0, quantite: 1, tauxTVA: 0 }, { id: 3, reference: 'BO003', description: 'Boîte à gouter Vert', prixHT: 15.0, quantite: 1, tauxTVA: 0 }, { id: 4, reference: 'BO004', description: 'Boîte à gouter Rose', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 95.0, totalTTC: 95.0 },
+        { numero: 'F00011', clientId: 'C00001', date: '2024-12-07', dateEcheance: '2025-01-06', modeReglement: 'CB', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T008', description: 'Tasse en verre jaune', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
+        { numero: 'F00012', clientId: 'C00001', date: '2024-12-07', dateEcheance: '2025-01-06', modeReglement: 'CB', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'G005', description: 'Gourde sport Alu Gris 500ML', prixHT: 13.0, quantite: 2, tauxTVA: 0 }], totalHT: 26.0, totalTTC: 26.0 },
+        { numero: 'F00013', clientId: 'C00012', date: '2024-12-19', dateEcheance: '2025-01-18', modeReglement: 'CB', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.0, quantite: 3, tauxTVA: 0 }, { id: 2, reference: 'BO004', description: 'Boîte à gouter Rose', prixHT: 15.0, quantite: 3, tauxTVA: 0 }], totalHT: 90.0, totalTTC: 90.0 },
+        { numero: 'F00014', clientId: 'C00013', date: '2025-02-27', dateEcheance: '2025-03-29', modeReglement: 'virement', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0.0, quantite: 1, tauxTVA: 0 }], totalHT: 0.0, totalTTC: 0.0 },
+        { numero: 'F00015', clientId: 'C00015', date: '2025-02-27', dateEcheance: '2025-03-29', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0.0, quantite: 1, tauxTVA: 0 }], totalHT: 0.0, totalTTC: 0.0 },
+        { numero: 'F00016', clientId: 'C00016', date: '2025-02-27', dateEcheance: '2025-03-29', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0.0, quantite: 1, tauxTVA: 0 }, { id: 2, reference: 'T008', description: 'Tasse en verre jaune', prixHT: 15.0, quantite: 2, tauxTVA: 0 }], totalHT: 30.0, totalTTC: 30.0 },
+        { numero: 'F00017', clientId: 'C00014', date: '2025-02-27', dateEcheance: '2025-03-29', modeReglement: 'virement', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0.0, quantite: 1, tauxTVA: 0 }], totalHT: 0.0, totalTTC: 0.0 },
+        { numero: 'F00018', clientId: 'C00017', date: '2025-03-30', dateEcheance: '2025-04-29', modeReglement: 'paypal', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA001', description: 'Panneau acrylique 100 x 150', prixHT: 8.0, quantite: 1, tauxTVA: 0 }, { id: 2, reference: 'PA002', description: 'Panneau acrylique 150 x 200', prixHT: 10.0, quantite: 1, tauxTVA: 0 }], totalHT: 18.0, totalTTC: 18.0 },
+        { numero: 'F00019', clientId: 'C00001', date: '2025-04-20', dateEcheance: '2025-05-20', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
+        { numero: 'F00020', clientId: 'C00017', date: '2025-04-25', dateEcheance: '2025-05-25', modeReglement: 'paypal', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA001', description: 'Panneau acrylique 100 x 150', prixHT: 8.0, quantite: 9, tauxTVA: 0 }, { id: 2, reference: 'PA002', description: 'Panneau acrylique 150 x 200', prixHT: 10.0, quantite: 10, tauxTVA: 0 }, { id: 3, reference: 'PA005', description: 'Panneau acrylique 200 x 300', prixHT: 22.0, quantite: 3, tauxTVA: 0 }], totalHT: 238.0, totalTTC: 238.0 },
+        { numero: 'F00021', clientId: 'C00019', date: '2025-05-20', dateEcheance: '2025-06-19', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T007', description: 'Tasse noir int blanc', prixHT: 0.0, quantite: 1, tauxTVA: 0 }], totalHT: 0.0, totalTTC: 0.0 },
+        { numero: 'F00022', clientId: 'C00016', date: '2025-06-24', dateEcheance: '2025-07-24', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA006', description: 'Panneau acrylique 100 x 200', prixHT: 8.5, quantite: 1, tauxTVA: 0 }], totalHT: 8.5, totalTTC: 8.5 },
+        { numero: 'F00023', clientId: 'C00020', date: '2025-07-03', dateEcheance: '2025-08-02', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA006', description: 'Panneau acrylique 100 x 200', prixHT: 8.5, quantite: 65, tauxTVA: 0 }], totalHT: 552.5, totalTTC: 552.5 },
+        { numero: 'F00024', clientId: 'C00021', date: '2025-08-30', dateEcheance: '2025-09-29', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'G010', description: 'Thermos Inox 750ML Gris+Gobelet', prixHT: 22.0, quantite: 1, tauxTVA: 0 }], totalHT: 22.0, totalTTC: 22.0 },
+        { numero: 'F00025', clientId: 'C00022', date: '2026-01-20', dateEcheance: '2026-01-20', modeReglement: 'virement', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA009', description: 'Panneau en verre 127 x 178', prixHT: 15.0, quantite: 16, tauxTVA: 0 }], totalHT: 240.0, totalTTC: 240.0 },
+        { numero: 'F00026', clientId: 'C00023', date: '2025-09-23', dateEcheance: '2025-10-23', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA002', description: 'Panneau acrylique 150 x 200', prixHT: 10.0, quantite: 2, tauxTVA: 0 }], totalHT: 20.0, totalTTC: 20.0 },
+        { numero: 'F00027', clientId: 'C00001', date: '2026-01-20', dateEcheance: '2026-01-20', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'G006', description: 'Gourde sport Alu Blanc 500ML', prixHT: 13.0, quantite: 1, tauxTVA: 0 }, { id: 2, reference: 'G011', description: 'Thermos Inox 750ML Blanc+Gobelet', prixHT: 22.0, quantite: 1, tauxTVA: 0 }], totalHT: 35.0, totalTTC: 35.0 },
+    ],
+    devis: [],
+    paiements: [],
+    relances: [], // Historique des relances envoyées
+    referencesMigrated: true // Flag pour migration des références
+};
+
+// ============================================
+// VARIABLES GLOBALES
+// ============================================
+let data = {};
+let currentTab = 'dashboard';
+let currentFacture = null;
+let caYear = new Date().getFullYear();
+let isAdminMode = false;
+
+// ============================================
+// FONCTIONS UTILITAIRES
+// ============================================
+function loadData() {
+    const saved = localStorage.getItem('facturier_stylemoi_v3');
+    if (saved) {
+        try {
+            data = JSON.parse(saved);
+            // Migration des anciennes données
+            if (!data.tauxURSSAFParMois) data.tauxURSSAFParMois = { 'default': 23.20 };
+            if (!data.relances) data.relances = [];
+            if (!data.cgv) data.cgv = defaultData.cgv;
+            if (!data.logo) data.logo = null;
+            if (!data.version) data.version = '3.2.0';
+            if (!data.adminPassword) data.adminPassword = 'admin123';
+            if (!data.categories) data.categories = defaultData.categories;
+            // Migration des produits sans catégorie
+            data.produits.forEach(p => {
+                if (!p.categorie) {
+                    const desc = p.description.toLowerCase();
+                    if (desc.includes('tasse') || desc.includes('mug') || desc.includes('choppe') || desc.includes('bol')) {
+                        p.categorie = 'tasses';
+                    } else if (desc.includes('gourde') || desc.includes('bouteille') || desc.includes('thermos') || desc.includes('cannette') || desc.includes('gobelet')) {
+                        p.categorie = 'gourdes';
+                    } else if (desc.includes('verre cannette') || desc.includes('verre avec paille')) {
+                        p.categorie = 'verres';
+                    } else if (desc.includes('ardoise')) {
+                        p.categorie = 'ardoises';
+                    } else if (desc.includes('panneau') || desc.includes('plaque photo')) {
+                        p.categorie = 'panneaux';
+                    } else if (desc.includes('planche') || desc.includes('gant') || desc.includes('manique') || desc.includes('carrelage')) {
+                        p.categorie = 'cuisine';
+                    } else if (desc.includes('tablier')) {
+                        p.categorie = 'tabliers';
+                    } else if (desc.includes('boîte') || desc.includes('boite')) {
+                        p.categorie = 'boites';
+                    } else if (desc.includes('coussin') || desc.includes('bouillotte')) {
+                        p.categorie = 'coussins';
+                    } else if (desc.includes('tshirt') || desc.includes('t-shirt')) {
+                        p.categorie = 'tshirts';
+                    } else if (desc.includes('body') || desc.includes('bavoir') || desc.includes('doudou')) {
+                        p.categorie = 'bebe';
+                    } else if (desc.includes('serviette')) {
+                        p.categorie = 'serviettes';
+                    } else {
+                        p.categorie = 'accessoires';
+                    }
+                }
+            });
+            // Migration des références produits par catégorie (une seule fois)
+            if (!data.referencesMigrated) {
+                migrateProductReferences();
+                data.referencesMigrated = true;
+            }
+        } catch (e) {
+            data = JSON.parse(JSON.stringify(defaultData));
+        }
+    } else {
+        data = JSON.parse(JSON.stringify(defaultData));
+    }
+}
+
+function saveData() {
+    localStorage.setItem('facturier_stylemoi_v3', JSON.stringify(data));
+}
+
+function migrateProductReferences() {
+    // Table de correspondance catégorie -> préfixe
+    const prefixes = {
+        'tasses': 'T',
+        'gourdes': 'G',
+        'verres': 'V',
+        'ardoises': 'A',
+        'panneaux': 'PA',
+        'cuisine': 'CU',
+        'tabliers': 'TA',
+        'boites': 'BO',
+        'accessoires': 'AC',
+        'coussins': 'CO',
+        'tshirts': 'TS',
+        'bebe': 'BE',
+        'serviettes': 'SE',
+        'divers': 'D'
+    };
+    
+    // Compteurs par catégorie
+    const compteurs = {};
+    Object.keys(prefixes).forEach(cat => compteurs[cat] = 0);
+    
+    // Mapping anciennes références -> nouvelles
+    const refMapping = {};
+    
+    // Renommer tous les produits
+    data.produits.forEach(p => {
+        const oldRef = p.reference;
+        const catId = p.categorie || 'divers';
+        const prefix = prefixes[catId] || 'X';
+        
+        compteurs[catId] = (compteurs[catId] || 0) + 1;
+        const newRef = `${prefix}${String(compteurs[catId]).padStart(3, '0')}`;
+        
+        refMapping[oldRef] = newRef;
+        p.reference = newRef;
+    });
+    
+    // Mettre à jour les factures
+    if (data.factures) {
+        data.factures.forEach(f => {
+            if (f.lignes) {
+                f.lignes.forEach(l => {
+                    if (refMapping[l.reference]) {
+                        l.reference = refMapping[l.reference];
+                    }
+                });
+            }
+        });
+    }
+    
+    // Mettre à jour les devis
+    if (data.devis) {
+        data.devis.forEach(d => {
+            if (d.lignes) {
+                d.lignes.forEach(l => {
+                    if (refMapping[l.reference]) {
+                        l.reference = refMapping[l.reference];
+                    }
+                });
+            }
+        });
+    }
+    
+    console.log('Migration des références effectuée:', refMapping);
+}
+
+function generateNumber(prefix, items) {
+    const nums = items.map(i => parseInt(i.numero?.replace(prefix, '') || '0')).filter(n => !isNaN(n));
+    const max = nums.length > 0 ? Math.max(...nums) : 0;
+    return `${prefix}${String(max + 1).padStart(5, '0')}`;
+}
+
+function generateProductReference(categorieId) {
+    // Table de correspondance catégorie -> préfixe
+    const prefixes = {
+        'tasses': 'T',
+        'gourdes': 'G',
+        'verres': 'V',
+        'ardoises': 'A',
+        'panneaux': 'PA',
+        'cuisine': 'CU',
+        'tabliers': 'TA',
+        'boites': 'BO',
+        'accessoires': 'AC',
+        'coussins': 'CO',
+        'tshirts': 'TS',
+        'bebe': 'BE',
+        'serviettes': 'SE',
+        'divers': 'D'
+    };
+    
+    const prefixe = prefixes[categorieId] || 'X';
+    
+    // Trouver le numéro max pour cette catégorie
+    const produitsCategorie = data.produits.filter(p => p.categorie === categorieId);
+    const regex = new RegExp(`^${prefixe}(\\d+)$`);
+    const nums = produitsCategorie
+        .map(p => {
+            const match = p.reference.match(regex);
+            return match ? parseInt(match[1]) : 0;
+        })
+        .filter(n => !isNaN(n));
+    
+    const max = nums.length > 0 ? Math.max(...nums) : 0;
+    return `${prefixe}${String(max + 1).padStart(3, '0')}`;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+}
+
+function formatMoney(amount) {
+    return (amount || 0).toFixed(2) + ' €';
+}
+
+function getClientName(facture) {
+    if (facture.paiementComptoir) return '🛒 Paiement comptoir';
+    const client = getClient(facture.clientId);
+    return client?.nom || '-';
+}
+
+function getClient(id) {
+    return data.clients.find(c => c.numero === id);
+}
+
+function getTauxURSSAF(yearMonth) {
+    return data.tauxURSSAFParMois[yearMonth] !== undefined 
+        ? data.tauxURSSAFParMois[yearMonth] 
+        : (data.tauxURSSAFParMois['default'] || 23.20);
+}
+
+function setTauxURSSAF(yearMonth, taux) {
+    data.tauxURSSAFParMois[yearMonth] = taux;
+    saveData();
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+const menuItems = [
+    { id: 'dashboard', icon: '📊', label: 'Tableau de bord' },
+    { id: 'clients', icon: '👥', label: 'Clients' },
+    { id: 'produits', icon: '📦', label: 'Produits' },
+    { id: 'devis', icon: '📝', label: 'Devis' },
+    { id: 'factures', icon: '🧾', label: 'Factures' },
+    { id: 'paiements', icon: '💳', label: 'Suivi paiements' },
+    { id: 'relances', icon: '📬', label: 'Lettres de relance' },
+    { id: 'ca', icon: '💰', label: "Chiffre d'affaires" },
+    { id: 'settings', icon: '⚙️', label: 'Paramètres' },
+];
+
+function renderNav() {
+    const nav = document.getElementById('nav-menu');
+    nav.innerHTML = menuItems.map(item => `
+        <button onclick="navigateTo('${item.id}')" 
+            class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${currentTab === item.id ? 'active text-white shadow-lg' : 'text-stone-300 hover:bg-stone-700/50'}">
+            <span class="text-xl">${item.icon}</span>
+            <span class="font-medium">${item.label}</span>
+        </button>
+    `).join('');
+    
+    // Mise à jour du logo dans la sidebar
+    updateSidebarLogo();
+}
+
+function updateSidebarLogo() {
+    const logoContainer = document.getElementById('sidebar-logo');
+    if (data.logo) {
+        logoContainer.innerHTML = `<img src="${data.logo}" alt="Logo" class="max-h-16">`;
+    } else {
+        logoContainer.innerHTML = `<h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">${data.entreprise.nom}</h1>`;
+    }
+    document.getElementById('version-display').textContent = 'v' + data.version;
+}
+
+function navigateTo(tab) {
+    if (tab === 'settings') {
+        // Demander le mot de passe admin pour accéder aux paramètres
+        askAdminPassword(() => {
+            currentTab = tab;
+            renderNav();
+            renderPage();
+        });
+    } else {
+        currentTab = tab;
+        renderNav();
+        renderPage();
+    }
+}
+
+function askAdminPassword(callback) {
+    const content = `
+        <div class="space-y-4">
+            <p class="text-stone-600">🔐 Cette section est protégée. Entrez le mot de passe administrateur.</p>
+            <div>
+                <label class="block text-sm font-medium text-stone-600 mb-1">Mot de passe</label>
+                <input type="password" id="admin-access-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl" placeholder="Mot de passe..." onkeypress="if(event.key==='Enter')checkAdminAccess()">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="checkAdminAccess()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Accéder</button>
+        </div>
+    `;
+    window.adminCallback = callback;
+    showModal('🔒 Accès Paramètres', content, 'max-w-md');
+    setTimeout(() => document.getElementById('admin-access-password')?.focus(), 100);
+}
+
+function checkAdminAccess() {
+    const password = document.getElementById('admin-access-password').value;
+    if (password === data.adminPassword) {
+        closeModal();
+        if (window.adminCallback) {
+            window.adminCallback();
+            window.adminCallback = null;
+        }
+    } else {
+        alert('❌ Mot de passe incorrect !');
+    }
+}
+
+// ============================================
+// MODAL
+// ============================================
+function showModal(title, content, size = 'max-w-4xl') {
+    const container = document.getElementById('modal-container');
+    const modalContent = document.getElementById('modal-content');
+    modalContent.className = `bg-white rounded-2xl shadow-2xl w-full ${size} max-h-[90vh] overflow-hidden`;
+    modalContent.innerHTML = `
+        <div class="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <h2 class="text-xl font-semibold text-stone-800">${title}</h2>
+            <button onclick="closeModal()" class="p-2 hover:bg-stone-200 rounded-full transition-colors text-xl">✕</button>
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">${content}</div>
+    `;
+    container.classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modal-container').classList.add('hidden');
+}
+
+// ============================================
+// DASHBOARD
+// ============================================
+function renderDashboard() {
+    const today = new Date();
+    const thisMonth = data.factures.filter(f => {
+        const d = new Date(f.date);
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    });
+    const caThisMonth = thisMonth.reduce((sum, f) => sum + (f.totalHT || 0), 0);
+    const facturesNonPayees = data.factures.filter(f => !data.paiements?.find(p => p.numero === f.numero)?.paye);
+    const totalImpaye = facturesNonPayees.reduce((sum, f) => sum + (f.totalTTC || 0), 0);
+    
+    // Factures en retard (échéance dépassée)
+    const facturesEnRetard = facturesNonPayees.filter(f => new Date(f.dateEcheance) < today);
+
+    return `
+        <div class="space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-stone-800">Bonjour ! 👋</h2>
+                <p class="text-stone-500">${today.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-2xl p-6 shadow-lg">
+                    <div class="flex items-center gap-3 mb-2"><span class="text-3xl">💰</span><span class="text-amber-100">CA ce mois</span></div>
+                    <p class="text-3xl font-bold">${formatMoney(caThisMonth)}</p>
+                    <p class="text-amber-100 text-sm mt-1">${thisMonth.length} facture(s)</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-2"><span class="text-3xl">🧾</span><span class="text-stone-500">Factures</span></div>
+                    <p class="text-3xl font-bold text-stone-800">${data.factures.length}</p>
+                    <p class="text-stone-500 text-sm mt-1">Total créées</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-2"><span class="text-3xl">👥</span><span class="text-stone-500">Clients</span></div>
+                    <p class="text-3xl font-bold text-stone-800">${data.clients.length}</p>
+                    <p class="text-stone-500 text-sm mt-1">Enregistrés</p>
+                </div>
+                <div class="${totalImpaye > 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'} rounded-2xl p-6 border shadow-sm">
+                    <div class="flex items-center gap-3 mb-2"><span class="text-3xl">⚠️</span><span class="${totalImpaye > 0 ? 'text-red-600' : 'text-emerald-600'}">À encaisser</span></div>
+                    <p class="text-3xl font-bold ${totalImpaye > 0 ? 'text-red-700' : 'text-emerald-700'}">${formatMoney(totalImpaye)}</p>
+                    <p class="text-sm mt-1 ${totalImpaye > 0 ? 'text-red-500' : 'text-emerald-500'}">${facturesNonPayees.length} facture(s)</p>
+                </div>
+            </div>
+            
+            ${facturesEnRetard.length > 0 ? `
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                <h3 class="font-semibold text-red-800 mb-2">⚠️ ${facturesEnRetard.length} facture(s) en retard de paiement</h3>
+                <div class="space-y-2">
+                    ${facturesEnRetard.slice(0, 3).map(f => `
+                        <div class="flex justify-between items-center bg-white rounded-lg p-3">
+                            <div>
+                                <span class="font-medium">${f.numero}</span> - ${getClientName(f)}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-red-600 font-medium">${formatMoney(f.totalTTC)}</span>
+                                <button onclick="navigateTo('relances')" class="text-sm bg-red-500 text-white px-3 py-1 rounded-lg">Relancer</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${facturesEnRetard.length > 3 ? `<p class="text-sm text-red-600 mt-2">Et ${facturesEnRetard.length - 3} autre(s)...</p>` : ''}
+            </div>
+            ` : ''}
+            
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <h3 class="font-semibold text-stone-800 mb-4">Dernières factures</h3>
+                    <div class="space-y-3">
+                        ${data.factures.slice(-5).reverse().map(f => `
+                            <div class="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
+                                <div><p class="font-medium">${f.numero}</p><p class="text-sm text-stone-500">${getClientName(f)}</p></div>
+                                <div class="text-right"><p class="font-medium">${formatMoney(f.totalTTC)}</p><p class="text-sm text-stone-500">${formatDate(f.date)}</p></div>
+                            </div>
+                        `).join('') || '<p class="text-stone-400 text-center py-4">Aucune facture</p>'}
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm">
+                    <h3 class="font-semibold text-stone-800 mb-4">Produits populaires</h3>
+                    <div class="space-y-3">
+                        ${data.produits.filter(p => p.prixHT > 0).slice(0, 6).map(p => `
+                            <div class="flex items-center justify-between py-2 border-b border-stone-100 last:border-0">
+                                <div><p class="font-medium">${p.description}</p><p class="text-sm text-stone-500">${p.reference}</p></div>
+                                <p class="font-medium text-amber-600">${formatMoney(p.prixHT)}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================
+// CLIENTS
+// ============================================
+let clientSearch = '';
+
+function renderClients() {
+    const filtered = data.clients.filter(c => 
+        c.nom.toLowerCase().includes(clientSearch.toLowerCase()) || 
+        c.numero.toLowerCase().includes(clientSearch.toLowerCase())
+    );
+
+    return `
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">Base Clients (${data.clients.length})</h2>
+                <button onclick="openClientModal()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2">
+                    <span>+</span> Nouveau client
+                </button>
+            </div>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
+                <input type="text" placeholder="Rechercher un client..." value="${clientSearch}" 
+                    oninput="clientSearch = this.value; renderPage()"
+                    class="w-full pl-12 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:outline-none">
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-stone-100 to-stone-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">N° Client</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Type</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Nom</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Ville</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Email</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        ${filtered.map(c => `
+                            <tr class="hover:bg-amber-50/50 transition-colors">
+                                <td class="px-4 py-3 text-sm">${c.numero}</td>
+                                <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-medium ${c.type === 'Professionnel' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}">${c.type}</span></td>
+                                <td class="px-4 py-3 text-sm font-medium">${c.nom}</td>
+                                <td class="px-4 py-3 text-sm">${c.ville || '-'}</td>
+                                <td class="px-4 py-3 text-sm">${c.email || '-'}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="openClientModal('${c.numero}')" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg" title="Modifier">✏️</button>
+                                    <button onclick="deleteClient('${c.numero}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Supprimer">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-stone-400">Aucun client</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function openClientModal(numero = null) {
+    const client = numero ? data.clients.find(c => c.numero === numero) : {
+        numero: generateNumber('C', data.clients),
+        type: 'Particulier', nom: '', adresse: '', codePostal: '', ville: '',
+        telephone: '', portable: '', email: ''
+    };
+    const isEdit = !!numero;
+
+    const content = `
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">N° Client</label>
+                <input type="text" id="client-numero" value="${client.numero}" disabled class="w-full px-4 py-2.5 border border-stone-300 rounded-xl bg-stone-100"></div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Type</label>
+                <select id="client-type" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                    <option value="Particulier" ${client.type === 'Particulier' ? 'selected' : ''}>Particulier</option>
+                    <option value="Professionnel" ${client.type === 'Professionnel' ? 'selected' : ''}>Professionnel</option>
+                </select></div>
+            <div class="col-span-2"><label class="block text-sm font-medium text-stone-600 mb-1">Nom / Raison sociale</label>
+                <input type="text" id="client-nom" value="${client.nom}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div class="col-span-2"><label class="block text-sm font-medium text-stone-600 mb-1">Adresse</label>
+                <input type="text" id="client-adresse" value="${client.adresse || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Code postal</label>
+                <input type="text" id="client-cp" value="${client.codePostal || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Ville</label>
+                <input type="text" id="client-ville" value="${client.ville || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Téléphone</label>
+                <input type="text" id="client-tel" value="${client.telephone || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Portable</label>
+                <input type="text" id="client-portable" value="${client.portable || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div class="col-span-2"><label class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+                <input type="email" id="client-email" value="${client.email || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveClient('${numero || ''}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">${isEdit ? 'Enregistrer' : 'Créer'}</button>
+        </div>
+    `;
+    showModal(isEdit ? 'Modifier client' : 'Nouveau client', content, 'max-w-2xl');
+}
+
+function saveClient(oldNumero) {
+    const client = {
+        numero: document.getElementById('client-numero').value,
+        type: document.getElementById('client-type').value,
+        nom: document.getElementById('client-nom').value,
+        adresse: document.getElementById('client-adresse').value,
+        codePostal: document.getElementById('client-cp').value,
+        ville: document.getElementById('client-ville').value,
+        telephone: document.getElementById('client-tel').value,
+        portable: document.getElementById('client-portable').value,
+        email: document.getElementById('client-email').value
+    };
+
+    if (oldNumero) {
+        const idx = data.clients.findIndex(c => c.numero === oldNumero);
+        if (idx !== -1) data.clients[idx] = client;
+    } else {
+        data.clients.push(client);
+    }
+
+    saveData();
+    closeModal();
+    renderPage();
+}
+
+function deleteClient(numero) {
+    if (confirm('Supprimer ce client ?')) {
+        data.clients = data.clients.filter(c => c.numero !== numero);
+        saveData();
+        renderPage();
+    }
+}
+
+// ============================================
+// PRODUITS
+// ============================================
+let produitSearch = '';
+let selectedCategorie = null; // null = toutes les catégories
+
+function renderProduits() {
+    // Filtrer par catégorie et recherche
+    let filtered = data.produits;
+    if (selectedCategorie) {
+        filtered = filtered.filter(p => p.categorie === selectedCategorie);
+    }
+    if (produitSearch) {
+        filtered = filtered.filter(p => 
+            p.description.toLowerCase().includes(produitSearch.toLowerCase()) || 
+            p.reference.toLowerCase().includes(produitSearch.toLowerCase())
+        );
+    }
+
+    // Grouper par catégorie pour l'affichage
+    const produitsParCategorie = {};
+    data.categories.forEach(cat => {
+        produitsParCategorie[cat.id] = filtered.filter(p => p.categorie === cat.id);
+    });
+    // Produits sans catégorie
+    const sansCat = filtered.filter(p => !p.categorie || !data.categories.find(c => c.id === p.categorie));
+    if (sansCat.length > 0) {
+        produitsParCategorie['_autres'] = sansCat;
+    }
+
+    return `
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">Base Produits (${data.produits.length})</h2>
+                <div class="flex gap-2">
+                    <button onclick="openCategorieModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 flex items-center gap-2">
+                        <span>📁</span> Gérer catégories
+                    </button>
+                    <button onclick="openProduitModal()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2">
+                        <span>+</span> Nouveau produit
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtres par catégorie -->
+            <div class="flex flex-wrap gap-2">
+                <button onclick="selectedCategorie = null; renderPage()" 
+                    class="px-4 py-2 rounded-xl font-medium transition-all ${!selectedCategorie ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}">
+                    Tous (${data.produits.length})
+                </button>
+                ${data.categories.map(cat => {
+                    const count = data.produits.filter(p => p.categorie === cat.id).length;
+                    return `
+                        <button onclick="selectedCategorie = '${cat.id}'; renderPage()" 
+                            class="px-4 py-2 rounded-xl font-medium transition-all flex items-center gap-2 ${selectedCategorie === cat.id ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}">
+                            <span>${cat.icon}</span> ${cat.nom} (${count})
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+
+            <!-- Barre de recherche -->
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
+                <input type="text" placeholder="Rechercher un produit..." value="${produitSearch}" 
+                    oninput="produitSearch = this.value; renderPage()"
+                    class="w-full pl-12 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:outline-none">
+            </div>
+
+            <!-- Affichage par catégorie ou liste simple -->
+            ${selectedCategorie ? renderProduitsTable(filtered) : renderProduitsParCategorie(produitsParCategorie)}
+        </div>
+    `;
+}
+
+function renderProduitsTable(produits) {
+    return `
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-stone-100 to-stone-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Réf.</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Description</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Prix HT</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Coût</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Marge</th>
+                        <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    ${produits.map(p => `
+                        <tr class="hover:bg-amber-50/50 transition-colors">
+                            <td class="px-4 py-3 text-sm">${p.reference}</td>
+                            <td class="px-4 py-3 text-sm font-medium">${p.description}</td>
+                            <td class="px-4 py-3 text-sm text-right">${formatMoney(p.prixHT)}</td>
+                            <td class="px-4 py-3 text-sm text-right">${formatMoney(p.coutAchat)}</td>
+                            <td class="px-4 py-3 text-sm text-right ${p.marge > 0 ? 'text-emerald-600 font-medium' : 'text-stone-400'}">${(p.marge || 0).toFixed(2)}</td>
+                            <td class="px-4 py-3 text-right">
+                                <button onclick="openProduitModal('${p.reference}')" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg">✏️</button>
+                                <button onclick="deleteProduit('${p.reference}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">🗑️</button>
+                            </td>
+                        </tr>
+                    `).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-stone-400">Aucun produit</td></tr>'}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderProduitsParCategorie(produitsParCategorie) {
+    return `
+        <div class="space-y-6">
+            ${data.categories.map(cat => {
+                const produits = produitsParCategorie[cat.id] || [];
+                if (produits.length === 0) return '';
+                return `
+                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 border-b border-stone-200 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">${cat.icon}</span>
+                                <h3 class="font-semibold text-stone-800">${cat.nom}</h3>
+                                <span class="bg-amber-100 text-amber-700 text-sm px-2 py-0.5 rounded-full">${produits.length}</span>
+                            </div>
+                            <button onclick="selectedCategorie = '${cat.id}'; renderPage()" class="text-sm text-amber-600 hover:text-amber-700 font-medium">
+                                Voir tout →
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                            ${produits.slice(0, 6).map(p => `
+                                <div class="bg-stone-50 rounded-xl p-3 hover:bg-amber-50/50 transition-colors cursor-pointer group" onclick="openProduitModal('${p.reference}')">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-xs text-stone-400">${p.reference}</p>
+                                            <p class="font-medium text-stone-800">${p.description}</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-amber-600">${formatMoney(p.prixHT)}</p>
+                                    </div>
+                                    <div class="flex justify-between items-center mt-2 text-xs text-stone-500">
+                                        <span>Coût: ${formatMoney(p.coutAchat)}</span>
+                                        <span class="${p.marge > 0 ? 'text-emerald-600' : ''}">Marge: ${(p.marge || 0).toFixed(2)}</span>
+                                    </div>
+                                    <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <button onclick="event.stopPropagation(); deleteProduit('${p.reference}')" class="p-1 text-red-500 hover:bg-red-100 rounded">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${produits.length > 6 ? `<div class="px-4 pb-3 text-center"><button onclick="selectedCategorie = '${cat.id}'; renderPage()" class="text-amber-600 text-sm hover:underline">+ ${produits.length - 6} autres produits</button></div>` : ''}
+                    </div>
+                `;
+            }).join('')}
+            ${produitsParCategorie['_autres']?.length > 0 ? `
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                    <div class="bg-stone-100 px-4 py-3 border-b border-stone-200">
+                        <h3 class="font-semibold text-stone-800">📦 Sans catégorie (${produitsParCategorie['_autres'].length})</h3>
+                    </div>
+                    ${renderProduitsTable(produitsParCategorie['_autres'])}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function openProduitModal(reference = null) {
+    const defaultCategorie = selectedCategorie || data.categories[0]?.id || 'divers';
+    const produit = reference ? data.produits.find(p => p.reference === reference) : {
+        reference: generateProductReference(defaultCategorie),
+        description: '', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: defaultCategorie
+    };
+    const isEdit = !!reference;
+
+    const content = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Catégorie</label>
+                    <select id="produit-categorie" ${isEdit ? '' : 'onchange="updateProductReference()"'} class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                        ${data.categories.map(c => `<option value="${c.id}" ${produit.categorie === c.id ? 'selected' : ''}>${c.icon} ${c.nom}</option>`).join('')}
+                    </select></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Référence</label>
+                    <input type="text" id="produit-ref" value="${produit.reference}" ${isEdit ? 'disabled' : 'readonly'} class="w-full px-4 py-2.5 border border-stone-300 rounded-xl bg-stone-100 font-mono font-bold text-amber-600"></div>
+            </div>
+            <div><label class="block text-sm font-medium text-stone-600 mb-1">Description</label>
+                <input type="text" id="produit-desc" value="${produit.description}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Prix HT (€)</label>
+                    <input type="number" step="0.01" id="produit-prix" value="${produit.prixHT}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Taux TVA (%)</label>
+                    <select id="produit-tva" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                        ${data.tauxTVA.map(t => `<option value="${t}" ${produit.tauxTVA === t ? 'selected' : ''}>${t} %</option>`).join('')}
+                    </select></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Coût d'achat (€)</label>
+                    <input type="number" step="0.01" id="produit-cout" value="${produit.coutAchat}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Coefficient de marge</label>
+                    <input type="number" step="0.01" id="produit-marge" value="${produit.marge}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveProduit('${reference || ''}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">${isEdit ? 'Enregistrer' : 'Créer'}</button>
+        </div>
+    `;
+    showModal(isEdit ? 'Modifier produit' : 'Nouveau produit', content, 'max-w-xl');
+}
+
+function updateProductReference() {
+    const categorieId = document.getElementById('produit-categorie').value;
+    const newRef = generateProductReference(categorieId);
+    document.getElementById('produit-ref').value = newRef;
+}
+
+function saveProduit(oldRef) {
+    const produit = {
+        reference: document.getElementById('produit-ref').value,
+        description: document.getElementById('produit-desc').value,
+        prixHT: parseFloat(document.getElementById('produit-prix').value) || 0,
+        tauxTVA: parseFloat(document.getElementById('produit-tva').value) || 0,
+        coutAchat: parseFloat(document.getElementById('produit-cout').value) || 0,
+        marge: parseFloat(document.getElementById('produit-marge').value) || 0,
+        categorie: document.getElementById('produit-categorie').value
+    };
+
+    if (oldRef) {
+        const idx = data.produits.findIndex(p => p.reference === oldRef);
+        if (idx !== -1) data.produits[idx] = produit;
+    } else {
+        data.produits.push(produit);
+    }
+
+    saveData();
+    closeModal();
+    renderPage();
+}
+
+function deleteProduit(reference) {
+    if (confirm('Supprimer ce produit ?')) {
+        data.produits = data.produits.filter(p => p.reference !== reference);
+        saveData();
+        renderPage();
+    }
+}
+
+// ============================================
+// GESTION DES CATÉGORIES
+// ============================================
+function openCategorieModal() {
+    renderCategorieModal();
+}
+
+function renderCategorieModal() {
+    const content = `
+        <div class="space-y-4">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                💡 Les catégories permettent d'organiser vos produits. Chaque produit appartient à une catégorie.
+            </div>
+            
+            <!-- Liste des catégories -->
+            <div class="space-y-2">
+                ${data.categories.map((cat, index) => {
+                    const count = data.produits.filter(p => p.categorie === cat.id).length;
+                    return `
+                        <div class="flex items-center justify-between bg-stone-50 rounded-xl p-3 hover:bg-stone-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">${cat.icon}</span>
+                                <div>
+                                    <p class="font-medium text-stone-800">${cat.nom}</p>
+                                    <p class="text-xs text-stone-500">${count} produit${count > 1 ? 's' : ''}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="editCategorie('${cat.id}')" class="p-2 text-amber-500 hover:bg-amber-100 rounded-lg" title="Modifier">✏️</button>
+                                ${count === 0 ? `<button onclick="deleteCategorie('${cat.id}')" class="p-2 text-red-500 hover:bg-red-100 rounded-lg" title="Supprimer">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <!-- Formulaire nouvelle catégorie -->
+            <div class="border-t border-stone-200 pt-4 mt-4">
+                <h4 class="font-medium text-stone-700 mb-3">➕ Ajouter une catégorie</h4>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-stone-500 mb-1">Icône (emoji)</label>
+                        <input type="text" id="new-cat-icon" placeholder="📦" maxlength="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-center text-2xl">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs text-stone-500 mb-1">Nom de la catégorie</label>
+                        <input type="text" id="new-cat-nom" placeholder="Nouvelle catégorie" class="w-full px-3 py-2 border border-stone-300 rounded-lg">
+                    </div>
+                </div>
+                <button onclick="addCategorie()" class="mt-3 w-full btn-primary text-white py-2 rounded-lg font-medium">
+                    Ajouter la catégorie
+                </button>
+            </div>
+        </div>
+        <div class="flex justify-end mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Fermer</button>
+        </div>
+    `;
+    showModal('📁 Gérer les catégories', content, 'max-w-lg');
+}
+
+function addCategorie() {
+    const icon = document.getElementById('new-cat-icon').value.trim() || '📦';
+    const nom = document.getElementById('new-cat-nom').value.trim();
+    
+    if (!nom) {
+        alert('Veuillez saisir un nom de catégorie');
+        return;
+    }
+    
+    // Générer un ID unique
+    const id = nom.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Enlever accents
+        .replace(/[^a-z0-9]/g, '_') // Remplacer caractères spéciaux
+        .replace(/_+/g, '_'); // Éviter doubles underscores
+    
+    // Vérifier si l'ID existe déjà
+    if (data.categories.find(c => c.id === id)) {
+        alert('Une catégorie avec ce nom existe déjà');
+        return;
+    }
+    
+    data.categories.push({ id, nom, icon });
+    saveData();
+    renderCategorieModal();
+    renderPage();
+}
+
+function editCategorie(catId) {
+    const cat = data.categories.find(c => c.id === catId);
+    if (!cat) return;
+    
+    const content = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">Icône (emoji)</label>
+                    <input type="text" id="edit-cat-icon" value="${cat.icon}" maxlength="2" class="w-full px-3 py-2 border border-stone-300 rounded-lg text-center text-2xl">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs text-stone-500 mb-1">Nom de la catégorie</label>
+                    <input type="text" id="edit-cat-nom" value="${cat.nom}" class="w-full px-3 py-2 border border-stone-300 rounded-lg">
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="renderCategorieModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveCategorie('${catId}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer</button>
+        </div>
+    `;
+    showModal('✏️ Modifier la catégorie', content, 'max-w-md');
+}
+
+function saveCategorie(catId) {
+    const cat = data.categories.find(c => c.id === catId);
+    if (!cat) return;
+    
+    const newIcon = document.getElementById('edit-cat-icon').value.trim() || '📦';
+    const newNom = document.getElementById('edit-cat-nom').value.trim();
+    
+    if (!newNom) {
+        alert('Veuillez saisir un nom');
+        return;
+    }
+    
+    cat.icon = newIcon;
+    cat.nom = newNom;
+    saveData();
+    renderCategorieModal();
+    renderPage();
+}
+
+function deleteCategorie(catId) {
+    const cat = data.categories.find(c => c.id === catId);
+    if (!cat) return;
+    
+    const count = data.produits.filter(p => p.categorie === catId).length;
+    if (count > 0) {
+        alert(`Impossible de supprimer cette catégorie : ${count} produit(s) y sont associés.`);
+        return;
+    }
+    
+    if (confirm(`Supprimer la catégorie "${cat.nom}" ?`)) {
+        data.categories = data.categories.filter(c => c.id !== catId);
+        saveData();
+        renderCategorieModal();
+        renderPage();
+    }
+}
+
+// ============================================
+// FACTURES
+// ============================================
+function renderFactures() {
+    return `
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">Factures (${data.factures.length})</h2>
+                <button onclick="openFactureModal()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium flex items-center gap-2">
+                    <span>+</span> Nouvelle facture
+                </button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-stone-100 to-stone-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">N° Facture</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Client</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Total TTC</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Règlement</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        ${data.factures.map(f => `
+                            <tr class="hover:bg-amber-50/50 transition-colors">
+                                <td class="px-4 py-3 text-sm font-medium">${f.numero}</td>
+                                <td class="px-4 py-3 text-sm">${formatDate(f.date)}</td>
+                                <td class="px-4 py-3 text-sm">${getClientName(f)}</td>
+                                <td class="px-4 py-3 text-sm text-right font-medium">${formatMoney(f.totalTTC)}</td>
+                                <td class="px-4 py-3 text-sm">${f.modeReglement}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="viewFacture('${f.numero}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg" title="Voir/Imprimer">👁️</button>
+                                    <button onclick="openFactureModal('${f.numero}')" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg" title="Modifier">✏️</button>
+                                    <button onclick="deleteFacture('${f.numero}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Supprimer">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="6" class="px-4 py-8 text-center text-stone-400">Aucune facture</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function openFactureModal(numero = null) {
+    currentFacture = numero ? JSON.parse(JSON.stringify(data.factures.find(f => f.numero === numero))) : {
+        numero: generateNumber('F', data.factures),
+        clientId: data.clients[0]?.numero || '',
+        paiementComptoir: false,
+        date: new Date().toISOString().split('T')[0],
+        dateEcheance: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+        modeReglement: data.moyensReglement[0],
+        remise: 0, acompte: 0, lignes: [], notes: ''
+    };
+    // Migration pour anciennes factures sans paiementComptoir
+    if (currentFacture.paiementComptoir === undefined) currentFacture.paiementComptoir = false;
+    renderFactureModal();
+}
+
+function renderFactureModal() {
+    const f = currentFacture;
+    const client = f.paiementComptoir ? null : getClient(f.clientId);
+    
+    const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
+    const totalHTRemise = totalHT * (1 - f.remise / 100);
+    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+
+    const content = `
+        <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-stone-50 rounded-xl p-4">
+                    <h3 class="font-semibold text-stone-800 mb-2">${data.entreprise.nom}</h3>
+                    <p class="text-sm text-stone-600">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
+                </div>
+                <div class="space-y-3">
+                    <!-- Case Paiement Comptoir -->
+                    <label class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
+                        <input type="checkbox" id="facture-comptoir" ${f.paiementComptoir ? 'checked' : ''} onchange="currentFacture.paiementComptoir = this.checked; if(this.checked) currentFacture.clientId = ''; renderFactureModal()" class="w-5 h-5 rounded text-amber-500">
+                        <div>
+                            <span class="font-medium text-amber-800">🛒 Paiement comptoir</span>
+                            <p class="text-xs text-amber-600">Vente directe sans client enregistré</p>
+                        </div>
+                    </label>
+                    
+                    ${!f.paiementComptoir ? `
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Client</label>
+                        <select id="facture-client" onchange="currentFacture.clientId = this.value; renderFactureModal()" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                            ${data.clients.map(c => `<option value="${c.numero}" ${f.clientId === c.numero ? 'selected' : ''}>${c.numero} - ${c.nom}</option>`).join('')}
+                        </select>
+                        ${client ? `<div class="bg-amber-50 rounded-xl p-3 text-sm"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
+                    ` : `
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm">
+                            <p class="font-medium text-green-800">✓ Paiement comptoir</p>
+                            <p class="text-green-600">La facture sera émise sans nom de client</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+            <div class="grid grid-cols-4 gap-4">
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">N° Facture</label>
+                    <input type="text" value="${f.numero}" disabled class="w-full px-4 py-2.5 border border-stone-300 rounded-xl bg-stone-100"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Date</label>
+                    <input type="date" id="facture-date" value="${f.date}" onchange="currentFacture.date = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Échéance</label>
+                    <input type="date" id="facture-echeance" value="${f.dateEcheance}" onchange="currentFacture.dateEcheance = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Mode règlement</label>
+                    <select id="facture-reglement" onchange="currentFacture.modeReglement = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                        ${data.moyensReglement.map(m => `<option value="${m}" ${f.modeReglement === m ? 'selected' : ''}>${m}</option>`).join('')}
+                    </select></div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-stone-800">Lignes de facture</h3>
+                    <button onclick="showProductPicker()" class="btn-primary text-white px-3 py-1.5 rounded-lg text-sm">+ Ajouter produit</button>
+                </div>
+                <div id="product-picker" class="hidden bg-stone-50 rounded-xl p-4 space-y-3">
+                    <input type="text" id="product-search" placeholder="Rechercher un produit..." oninput="filterProducts(this.value)" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+                    <div id="product-list" class="max-h-48 overflow-y-auto space-y-1"></div>
+                </div>
+                <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-stone-100">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-sm">Réf.</th>
+                                <th class="px-3 py-2 text-left text-sm">Description</th>
+                                <th class="px-3 py-2 text-right text-sm">Prix HT</th>
+                                <th class="px-3 py-2 text-center text-sm w-20">Qté</th>
+                                <th class="px-3 py-2 text-right text-sm">Total</th>
+                                <th class="px-3 py-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            ${f.lignes.length === 0 ? '<tr><td colspan="6" class="px-4 py-6 text-center text-stone-400">Aucun produit</td></tr>' :
+                            f.lignes.map((l, i) => `
+                                <tr>
+                                    <td class="px-3 py-2 text-sm">${l.reference}</td>
+                                    <td class="px-3 py-2 text-sm">${l.description}</td>
+                                    <td class="px-3 py-2 text-sm text-right">${formatMoney(l.prixHT)}</td>
+                                    <td class="px-3 py-2"><input type="number" min="1" value="${l.quantite}" onchange="updateLigneQte(${i}, this.value)" class="w-16 text-center border border-stone-300 rounded px-2 py-1"></td>
+                                    <td class="px-3 py-2 text-sm text-right font-medium">${formatMoney(l.prixHT * l.quantite)}</td>
+                                    <td class="px-3 py-2"><button onclick="removeLigne(${i})" class="text-red-500 hover:bg-red-50 p-1 rounded">✕</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <div class="w-72 space-y-2 bg-stone-50 rounded-xl p-4">
+                    <div class="flex justify-between text-sm"><span>Total HT</span><span class="font-medium">${formatMoney(totalHT)}</span></div>
+                    <div class="flex justify-between text-sm items-center">
+                        <span>Remise (%)</span>
+                        <input type="number" min="0" max="100" value="${f.remise}" onchange="currentFacture.remise = parseFloat(this.value) || 0; renderFactureModal()" class="w-16 text-right border border-stone-300 rounded px-2 py-1">
+                    </div>
+                    ${f.remise > 0 ? `<div class="flex justify-between text-sm text-red-600"><span>Après remise</span><span>${formatMoney(totalHTRemise)}</span></div>` : ''}
+                    <div class="flex justify-between text-lg font-bold border-t border-stone-300 pt-2">
+                        <span>Total TTC</span><span class="text-amber-600">${formatMoney(totalTTC)}</span>
+                    </div>
+                </div>
+            </div>
+            ${data.entreprise.exonereTVA ? '<div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-sm text-amber-800">TVA non applicable, article 293B du CGI</div>' : ''}
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveFacture()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer</button>
+        </div>
+    `;
+    showModal('Facture ' + currentFacture.numero, content, 'max-w-4xl');
+}
+
+function showProductPicker() {
+    document.getElementById('product-picker').classList.remove('hidden');
+    filterProducts('');
+}
+
+function filterProducts(search) {
+    const filtered = data.produits.filter(p => 
+        p.description.toLowerCase().includes(search.toLowerCase()) || 
+        p.reference.toLowerCase().includes(search.toLowerCase())
+    ).slice(0, 10);
+    
+    document.getElementById('product-list').innerHTML = filtered.map(p => `
+        <button onclick="addProductToFacture('${p.reference}')" class="w-full text-left px-3 py-2 hover:bg-amber-100 rounded-lg transition-colors flex justify-between">
+            <span>${p.reference} - ${p.description}</span>
+            <span class="text-amber-600 font-medium">${formatMoney(p.prixHT)}</span>
+        </button>
+    `).join('') || '<p class="text-stone-400 text-center py-2">Aucun produit</p>';
+}
+
+function addProductToFacture(reference) {
+    const produit = data.produits.find(p => p.reference === reference);
+    if (produit) {
+        currentFacture.lignes.push({
+            id: Date.now(),
+            reference: produit.reference,
+            description: produit.description,
+            prixHT: produit.prixHT,
+            quantite: 1,
+            tauxTVA: produit.tauxTVA
+        });
+        document.getElementById('product-picker').classList.add('hidden');
+        renderFactureModal();
+    }
+}
+
+function updateLigneQte(index, value) {
+    currentFacture.lignes[index].quantite = parseInt(value) || 1;
+    renderFactureModal();
+}
+
+function removeLigne(index) {
+    currentFacture.lignes.splice(index, 1);
+    renderFactureModal();
+}
+
+function saveFacture() {
+    const f = currentFacture;
+    const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
+    const totalHTRemise = totalHT * (1 - f.remise / 100);
+    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    
+    f.totalHT = totalHT;
+    f.totalHTRemise = totalHTRemise;
+    f.totalTTC = totalTTC;
+
+    const idx = data.factures.findIndex(x => x.numero === f.numero);
+    if (idx !== -1) {
+        data.factures[idx] = f;
+    } else {
+        data.factures.push(f);
+    }
+
+    saveData();
+    closeModal();
+    renderPage();
+}
+
+function deleteFacture(numero) {
+    if (confirm('Supprimer cette facture ?')) {
+        data.factures = data.factures.filter(f => f.numero !== numero);
+        saveData();
+        renderPage();
+    }
+}
+
+function viewFacture(numero) {
+    const f = data.factures.find(x => x.numero === numero);
+    const client = f.paiementComptoir ? null : getClient(f.clientId);
+    
+    const content = `
+        <div id="print-facture">
+            <!-- Page 1 : Facture -->
+            <div class="print-page">
+                <div class="flex justify-between mb-8">
+                    <div>
+                        ${data.logo ? `<img src="${data.logo}" alt="Logo" class="max-h-16 mb-2">` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
+                        <p class="text-sm text-stone-600">${data.entreprise.complement}</p>
+                        <p class="text-sm text-stone-600">${data.entreprise.adresse}</p>
+                        <p class="text-sm text-stone-600">${data.entreprise.codePostal} ${data.entreprise.ville}</p>
+                        <p class="text-sm text-stone-600">Tél : ${data.entreprise.telephone}</p>
+                        <p class="text-sm text-stone-600 mt-2">Siret : ${data.entreprise.siret}</p>
+                        <p class="text-sm text-stone-600">IBAN : ${data.entreprise.iban}</p>
+                        <p class="text-sm text-stone-600">BIC : ${data.entreprise.bic}</p>
+                    </div>
+                    <div class="text-right">
+                        <h1 class="text-2xl font-bold text-amber-600">FACTURE</h1>
+                        <p class="text-lg font-medium">${f.numero}</p>
+                        <p class="text-sm text-stone-600 mt-4">Date : ${formatDate(f.date)}</p>
+                        <p class="text-sm text-stone-600">Échéance : ${formatDate(f.dateEcheance)}</p>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-stone-500 mb-2">DESTINATAIRE</h3>
+                    <div class="bg-stone-50 p-4 rounded-lg">
+                        ${f.paiementComptoir ? `
+                            <p class="font-medium text-amber-700">🛒 Paiement comptoir</p>
+                            <p class="text-sm text-stone-500">Vente directe - Client de passage</p>
+                        ` : `
+                            <p class="font-medium">${client?.nom || '-'}</p>
+                            <p class="text-sm">${client?.adresse || ''}</p>
+                            <p class="text-sm">${client?.codePostal || ''} ${client?.ville || ''}</p>
+                        `}
+                    </div>
+                </div>
+                <table class="w-full border border-stone-200 mb-6">
+                    <thead class="bg-stone-100">
+                        <tr>
+                            <th class="border border-stone-200 px-3 py-2 text-left text-sm">Référence</th>
+                            <th class="border border-stone-200 px-3 py-2 text-left text-sm">Description</th>
+                            <th class="border border-stone-200 px-3 py-2 text-right text-sm">Prix HT</th>
+                            <th class="border border-stone-200 px-3 py-2 text-center text-sm">Qté</th>
+                            <th class="border border-stone-200 px-3 py-2 text-right text-sm">Total HT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${f.lignes.map(l => `
+                            <tr>
+                                <td class="border border-stone-200 px-3 py-2 text-sm">${l.reference}</td>
+                                <td class="border border-stone-200 px-3 py-2 text-sm">${l.description}</td>
+                                <td class="border border-stone-200 px-3 py-2 text-sm text-right">${formatMoney(l.prixHT)}</td>
+                                <td class="border border-stone-200 px-3 py-2 text-sm text-center">${l.quantite}</td>
+                                <td class="border border-stone-200 px-3 py-2 text-sm text-right">${formatMoney(l.prixHT * l.quantite)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="flex justify-end mb-6">
+                    <div class="w-64">
+                        <div class="flex justify-between py-1"><span>Total HT</span><span>${formatMoney(f.totalHT)}</span></div>
+                        ${f.remise > 0 ? `<div class="flex justify-between py-1 text-red-600"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
+                        <div class="flex justify-between py-2 border-t-2 border-stone-300 font-bold text-lg"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
+                    </div>
+                </div>
+                ${data.entreprise.exonereTVA ? '<p class="text-sm text-stone-500 italic mb-4">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p class="text-sm text-stone-600">Mode de règlement : ${f.modeReglement}</p>
+                <p class="text-xs text-stone-400 mt-4">Voir conditions générales de vente au verso</p>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6 no-print">
+            <button onclick="printFactureWithCGV('${f.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer (recto-verso)</button>
+        </div>
+    `;
+    showModal('Facture ' + f.numero, content, 'max-w-3xl');
+}
+
+function printFactureWithCGV(numero) {
+    const f = data.factures.find(x => x.numero === numero);
+    const client = f.paiementComptoir ? null : getClient(f.clientId);
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Facture ${f.numero}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
+                @page { size: A4; margin: 15mm; }
+                .page { page-break-after: always; min-height: 257mm; }
+                .page:last-child { page-break-after: auto; }
+                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background: #f5f5f5; }
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                .totals { width: 250px; margin-left: auto; }
+                .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
+                .total-line { border-top: 2px solid #333; font-weight: bold; font-size: 14px; }
+                h1 { color: #f59e0b; margin: 0; }
+                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center; }
+                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; }
+            </style>
+        </head>
+        <body>
+            <!-- Page 1: Facture -->
+            <div class="page">
+                <div class="header">
+                    <div>
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2 style="margin:0">${data.entreprise.nom}</h2>`}
+                        <p>${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                        <p style="margin-top:10px">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
+                    </div>
+                    <div style="text-align:right">
+                        <h1>FACTURE</h1>
+                        <p style="font-size:16px;font-weight:bold">${f.numero}</p>
+                        <p style="margin-top:15px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
+                    </div>
+                </div>
+                <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                    <strong>DESTINATAIRE</strong><br>
+                    ${f.paiementComptoir ? `
+                        <span style="color:#d97706;font-weight:bold">🛒 Paiement comptoir</span><br>
+                        <span style="color:#666">Vente directe - Client de passage</span>
+                    ` : `
+                        ${client?.nom || '-'}<br>
+                        ${client?.adresse || ''}<br>
+                        ${client?.codePostal || ''} ${client?.ville || ''}
+                    `}
+                </div>
+                <table>
+                    <thead><tr><th>Réf.</th><th>Description</th><th class="text-right">Prix HT</th><th class="text-center">Qté</th><th class="text-right">Total HT</th></tr></thead>
+                    <tbody>
+                        ${f.lignes.map(l => `<tr><td>${l.reference}</td><td>${l.description}</td><td class="text-right">${formatMoney(l.prixHT)}</td><td class="text-center">${l.quantite}</td><td class="text-right">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="totals">
+                    <div><span>Total HT</span><span>${formatMoney(f.totalHT)}</span></div>
+                    ${f.remise > 0 ? `<div style="color:red"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
+                    <div class="total-line"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
+                </div>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:20px">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="margin-top:15px">Mode de règlement: ${f.modeReglement}</p>
+                <p style="font-size:10px;color:#999;margin-top:30px">Voir conditions générales de vente au verso</p>
+            </div>
+            <!-- Page 2: CGV -->
+            <div class="page">
+                <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
+                <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// ============================================
+// DEVIS (similaire aux factures)
+// ============================================
+function renderDevis() {
+    return `
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">Devis (${data.devis.length})</h2>
+                <button onclick="openDevisModal()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">+ Nouveau devis</button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-stone-100 to-stone-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">N° Devis</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-600">Client</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Total TTC</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-stone-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-100">
+                        ${data.devis.map(d => `
+                            <tr class="hover:bg-amber-50/50">
+                                <td class="px-4 py-3 text-sm font-medium">${d.numero}</td>
+                                <td class="px-4 py-3 text-sm">${formatDate(d.date)}</td>
+                                <td class="px-4 py-3 text-sm">${getClient(d.clientId)?.nom || '-'}</td>
+                                <td class="px-4 py-3 text-sm text-right font-medium">${formatMoney(d.totalTTC)}</td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="viewDevis('${d.numero}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg">👁️</button>
+                                    <button onclick="convertDevisToFacture('${d.numero}')" class="p-1.5 text-green-500 hover:bg-green-50 rounded-lg" title="Convertir en facture">➡️🧾</button>
+                                    <button onclick="deleteDevis('${d.numero}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-stone-400">Aucun devis</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function openDevisModal() {
+    currentFacture = {
+        numero: generateNumber('D', data.devis),
+        clientId: data.clients[0]?.numero || '',
+        date: new Date().toISOString().split('T')[0],
+        dateEcheance: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+        modeReglement: data.moyensReglement[0],
+        remise: 0, lignes: []
+    };
+    renderDevisModal();
+}
+
+function renderDevisModal() {
+    renderFactureModal();
+    document.querySelector('#modal-content h2').textContent = 'Devis ' + currentFacture.numero;
+    const saveBtn = Array.from(document.querySelectorAll('#modal-content button')).find(b => b.textContent.includes('Enregistrer'));
+    if (saveBtn) saveBtn.onclick = saveDevis;
+}
+
+function saveDevis() {
+    const d = currentFacture;
+    const totalHT = d.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
+    const totalHTRemise = totalHT * (1 - d.remise / 100);
+    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    
+    d.totalHT = totalHT;
+    d.totalHTRemise = totalHTRemise;
+    d.totalTTC = totalTTC;
+
+    const idx = data.devis.findIndex(x => x.numero === d.numero);
+    if (idx !== -1) data.devis[idx] = d;
+    else data.devis.push(d);
+
+    saveData();
+    closeModal();
+    renderPage();
+}
+
+function viewDevis(numero) {
+    const d = data.devis.find(x => x.numero === numero);
+    const client = getClient(d.clientId);
+    
+    const content = `
+        <div class="space-y-6">
+            <div class="flex justify-between">
+                <div>
+                    ${data.logo ? `<img src="${data.logo}" class="max-h-16 mb-2">` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
+                    <p class="text-sm text-stone-600">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
+                </div>
+                <div class="text-right">
+                    <h1 class="text-2xl font-bold text-blue-600">DEVIS</h1>
+                    <p class="text-lg font-medium">${d.numero}</p>
+                    <p class="text-sm text-stone-600 mt-2">Date : ${formatDate(d.date)}</p>
+                </div>
+            </div>
+            <div class="bg-stone-50 p-4 rounded-lg">
+                <p class="font-medium">${client?.nom || '-'}</p>
+                <p class="text-sm">${client?.adresse || ''} ${client?.codePostal || ''} ${client?.ville || ''}</p>
+            </div>
+            <table class="w-full border border-stone-200">
+                <thead class="bg-stone-100"><tr><th class="border px-3 py-2 text-left text-sm">Réf.</th><th class="border px-3 py-2 text-left text-sm">Description</th><th class="border px-3 py-2 text-right text-sm">Prix HT</th><th class="border px-3 py-2 text-center text-sm">Qté</th><th class="border px-3 py-2 text-right text-sm">Total</th></tr></thead>
+                <tbody>${d.lignes.map(l => `<tr><td class="border px-3 py-2 text-sm">${l.reference}</td><td class="border px-3 py-2 text-sm">${l.description}</td><td class="border px-3 py-2 text-sm text-right">${formatMoney(l.prixHT)}</td><td class="border px-3 py-2 text-sm text-center">${l.quantite}</td><td class="border px-3 py-2 text-sm text-right">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}</tbody>
+            </table>
+            <div class="flex justify-end"><div class="w-64"><div class="flex justify-between py-2 border-t-2 font-bold"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div></div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="printDevisWithCGV('${d.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer</button>
+        </div>
+    `;
+    showModal('Devis ' + d.numero, content, 'max-w-3xl');
+}
+
+function printDevisWithCGV(numero) {
+    const d = data.devis.find(x => x.numero === numero);
+    const client = getClient(d.clientId);
+    
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Devis ${d.numero}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
+                @page { size: A4; margin: 15mm; }
+                .page { page-break-after: always; min-height: 257mm; }
+                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background: #f5f5f5; }
+                .text-right { text-align: right; }
+                h1 { color: #3b82f6; margin: 0; }
+                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center; }
+                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="page">
+                <div style="display:flex;justify-content:space-between;margin-bottom:30px">
+                    <div>
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2>${data.entreprise.nom}</h2>`}
+                        <p>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                    </div>
+                    <div style="text-align:right">
+                        <h1>DEVIS</h1>
+                        <p style="font-size:16px;font-weight:bold">${d.numero}</p>
+                        <p>Date: ${formatDate(d.date)}</p>
+                    </div>
+                </div>
+                <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                    <strong>DESTINATAIRE</strong><br>${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}
+                </div>
+                <table>
+                    <thead><tr><th>Réf.</th><th>Description</th><th class="text-right">Prix HT</th><th style="text-align:center">Qté</th><th class="text-right">Total</th></tr></thead>
+                    <tbody>${d.lignes.map(l => `<tr><td>${l.reference}</td><td>${l.description}</td><td class="text-right">${formatMoney(l.prixHT)}</td><td style="text-align:center">${l.quantite}</td><td class="text-right">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}</tbody>
+                </table>
+                <div style="width:250px;margin-left:auto"><div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #333;font-weight:bold;font-size:14px"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="font-size:10px;color:#999;margin-top:30px">Devis valable 30 jours. Voir CGV au verso.</p>
+            </div>
+            <div class="page">
+                <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
+                <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function convertDevisToFacture(numero) {
+    const devis = data.devis.find(d => d.numero === numero);
+    if (devis && confirm('Convertir ce devis en facture ?')) {
+        const facture = JSON.parse(JSON.stringify(devis));
+        facture.numero = generateNumber('F', data.factures);
+        facture.date = new Date().toISOString().split('T')[0];
+        facture.dateEcheance = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+        data.factures.push(facture);
+        saveData();
+        alert('Facture ' + facture.numero + ' créée !');
+        navigateTo('factures');
+    }
+}
+
+function deleteDevis(numero) {
+    if (confirm('Supprimer ce devis ?')) {
+        data.devis = data.devis.filter(d => d.numero !== numero);
+        saveData();
+        renderPage();
+    }
+}
+
+// ============================================
+// PAIEMENTS
+// ============================================
+function renderPaiements() {
+    const totalFacture = data.factures.reduce((sum, f) => sum + (f.totalTTC || 0), 0);
+    const paye = data.factures.filter(f => data.paiements?.find(p => p.numero === f.numero)?.paye);
+    const totalPaye = paye.reduce((sum, f) => sum + (f.totalTTC || 0), 0);
+
+    return `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-stone-800">Suivi des Paiements</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl p-4 border"><p class="text-sm text-stone-500">Total facturé</p><p class="text-2xl font-bold">${formatMoney(totalFacture)}</p></div>
+                <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200"><p class="text-sm text-emerald-600">Encaissé</p><p class="text-2xl font-bold text-emerald-700">${formatMoney(totalPaye)}</p></div>
+                <div class="bg-red-50 rounded-xl p-4 border border-red-200"><p class="text-sm text-red-600">Reste</p><p class="text-2xl font-bold text-red-700">${formatMoney(totalFacture - totalPaye)}</p></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border">
+                <table class="w-full">
+                    <thead class="bg-stone-100"><tr><th class="px-4 py-3 text-left">Facture</th><th class="px-4 py-3 text-left">Client</th><th class="px-4 py-3 text-left">Date</th><th class="px-4 py-3 text-left">Échéance</th><th class="px-4 py-3 text-right">Montant</th><th class="px-4 py-3 text-center">Statut</th></tr></thead>
+                    <tbody class="divide-y">
+                        ${data.factures.map(f => {
+                            const isPaye = data.paiements?.find(p => p.numero === f.numero)?.paye;
+                            const isLate = !isPaye && new Date(f.dateEcheance) < new Date();
+                            return `<tr class="${isPaye ? 'bg-emerald-50/50' : isLate ? 'bg-red-50/50' : ''}">
+                                <td class="px-4 py-3 font-medium">${f.numero}</td>
+                                <td class="px-4 py-3">${getClientName(f)}</td>
+                                <td class="px-4 py-3">${formatDate(f.date)}</td>
+                                <td class="px-4 py-3 ${isLate ? 'text-red-600 font-medium' : ''}">${formatDate(f.dateEcheance)} ${isLate ? '⚠️' : ''}</td>
+                                <td class="px-4 py-3 text-right font-medium">${formatMoney(f.totalTTC)}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="togglePaiement('${f.numero}')" class="px-3 py-1 rounded-full text-sm font-medium ${isPaye ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
+                                        ${isPaye ? '✓ Payé' : 'Non payé'}
+                                    </button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function togglePaiement(numero) {
+    if (!data.paiements) data.paiements = [];
+    const idx = data.paiements.findIndex(p => p.numero === numero);
+    if (idx !== -1) data.paiements.splice(idx, 1);
+    else data.paiements.push({ numero, paye: true, date: new Date().toISOString().split('T')[0] });
+    saveData();
+    renderPage();
+}
+
+// ============================================
+// RELANCES
+// ============================================
+function renderRelances() {
+    const today = new Date();
+    const facturesImpayees = data.factures.filter(f => {
+        const isPaye = data.paiements?.find(p => p.numero === f.numero)?.paye;
+        return !isPaye;
+    });
+    const facturesEnRetard = facturesImpayees.filter(f => new Date(f.dateEcheance) < today);
+
+    return `
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-stone-800">Lettres de Relance</h2>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <h3 class="font-semibold text-amber-800 mb-2">📬 ${facturesEnRetard.length} facture(s) en retard de paiement</h3>
+                <p class="text-sm text-amber-700">Sélectionnez une facture pour générer une lettre de relance</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border">
+                <table class="w-full">
+                    <thead class="bg-stone-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Facture</th>
+                            <th class="px-4 py-3 text-left">Client</th>
+                            <th class="px-4 py-3 text-left">Échéance</th>
+                            <th class="px-4 py-3 text-right">Montant</th>
+                            <th class="px-4 py-3 text-center">Retard</th>
+                            <th class="px-4 py-3 text-center">Relances</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        ${facturesEnRetard.map(f => {
+                            const client = getClient(f.clientId);
+                            const joursRetard = Math.floor((today - new Date(f.dateEcheance)) / (1000 * 60 * 60 * 24));
+                            const nbRelances = data.relances?.filter(r => r.factureNumero === f.numero).length || 0;
+                            return `
+                                <tr class="hover:bg-red-50/50">
+                                    <td class="px-4 py-3 font-medium">${f.numero}</td>
+                                    <td class="px-4 py-3">${client?.nom || '-'}</td>
+                                    <td class="px-4 py-3 text-red-600">${formatDate(f.dateEcheance)}</td>
+                                    <td class="px-4 py-3 text-right font-medium">${formatMoney(f.totalTTC)}</td>
+                                    <td class="px-4 py-3 text-center"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-sm">${joursRetard} j</span></td>
+                                    <td class="px-4 py-3 text-center">${nbRelances}</td>
+                                    <td class="px-4 py-3 text-right space-x-1">
+                                        <button onclick="previewRelance('${f.numero}', 1)" class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-sm" title="1ère relance">R1</button>
+                                        <button onclick="previewRelance('${f.numero}', 2)" class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm" title="2ème relance">R2</button>
+                                        <button onclick="previewRelance('${f.numero}', 3)" class="px-2 py-1 bg-red-100 text-red-700 rounded text-sm" title="Mise en demeure">MD</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('') || '<tr><td colspan="7" class="px-4 py-8 text-center text-stone-400">Aucune facture en retard 🎉</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+
+            ${data.relances?.length > 0 ? `
+            <div class="bg-white rounded-2xl p-6 border">
+                <h3 class="font-semibold text-stone-800 mb-4">Historique des relances</h3>
+                <div class="space-y-2">
+                    ${data.relances.slice(-10).reverse().map(r => `
+                        <div class="flex justify-between items-center py-2 border-b border-stone-100">
+                            <div><span class="font-medium">${r.factureNumero}</span> - ${r.clientNom}</div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm text-stone-500">${formatDate(r.date)}</span>
+                                <span class="px-2 py-1 ${r.type === 'email' ? 'bg-blue-100 text-blue-700' : 'bg-stone-100 text-stone-700'} rounded text-xs">${r.type === 'email' ? '📧 Email' : '📄 Courrier'}</span>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs">Niveau ${r.niveau}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function previewRelance(factureNumero, niveau) {
+    const f = data.factures.find(x => x.numero === factureNumero);
+    const client = getClient(f.clientId);
+    const joursRetard = Math.floor((new Date() - new Date(f.dateEcheance)) / (1000 * 60 * 60 * 24));
+    
+    const titres = {
+        1: 'PREMIÈRE RELANCE - Rappel de paiement',
+        2: 'DEUXIÈME RELANCE - Facture impayée',
+        3: 'MISE EN DEMEURE'
+    };
+    
+    const textes = {
+        1: `Madame, Monsieur,
+
+Sauf erreur de notre part, nous n'avons pas reçu le règlement de la facture référencée ci-dessous, arrivée à échéance le ${formatDate(f.dateEcheance)}.
+
+Facture n° : ${f.numero}
+Montant : ${formatMoney(f.totalTTC)}
+Date d'échéance : ${formatDate(f.dateEcheance)}
+
+Nous vous remercions de bien vouloir procéder au règlement de cette somme dans les meilleurs délais.
+
+Si votre règlement s'est croisé avec ce courrier, nous vous prions de ne pas tenir compte de ce rappel.
+
+Nous restons à votre disposition pour tout renseignement complémentaire.
+
+Cordialement,
+${data.entreprise.nom}`,
+
+        2: `Madame, Monsieur,
+
+Malgré notre précédent rappel, nous constatons que notre facture n'a toujours pas été réglée.
+
+Facture n° : ${f.numero}
+Montant : ${formatMoney(f.totalTTC)}
+Retard : ${joursRetard} jours
+
+Nous vous mettons en demeure de procéder au règlement de cette somme sous 8 jours.
+
+À défaut de règlement dans ce délai, nous nous verrons dans l'obligation d'engager des poursuites pour le recouvrement de notre créance, ce qui entraînerait des frais supplémentaires à votre charge.
+
+Cordialement,
+${data.entreprise.nom}`,
+
+        3: `Madame, Monsieur,
+
+MISE EN DEMEURE
+
+Par la présente, nous vous mettons en demeure de nous régler la somme de ${formatMoney(f.totalTTC)} correspondant à la facture n° ${f.numero} du ${formatDate(f.date)}, demeurée impayée malgré nos précédents rappels.
+
+À défaut de règlement dans un délai de 8 jours à compter de la réception de ce courrier, nous transmettrons ce dossier à notre service contentieux / notre avocat pour recouvrement judiciaire, sans autre avis de notre part.
+
+Les frais de procédure seront intégralement à votre charge.
+
+Fait pour servir et valoir ce que de droit.
+
+${data.entreprise.nom}`
+    };
+
+    const content = `
+        <div class="space-y-4">
+            <div class="bg-${niveau === 3 ? 'red' : 'amber'}-50 border border-${niveau === 3 ? 'red' : 'amber'}-200 rounded-xl p-4">
+                <h3 class="font-bold text-${niveau === 3 ? 'red' : 'amber'}-800">${titres[niveau]}</h3>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-stone-50 rounded-xl p-4">
+                    <p class="text-sm text-stone-500">Expéditeur</p>
+                    <p class="font-medium">${data.entreprise.nom}</p>
+                    <p class="text-sm">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
+                </div>
+                <div class="bg-stone-50 rounded-xl p-4">
+                    <p class="text-sm text-stone-500">Destinataire</p>
+                    <p class="font-medium">${client?.nom || '-'}</p>
+                    <p class="text-sm">${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}</p>
+                    ${client?.email ? `<p class="text-sm text-blue-600">${client.email}</p>` : '<p class="text-sm text-red-500">⚠️ Pas d\'email</p>'}
+                </div>
+            </div>
+
+            <div class="bg-white border rounded-xl p-6">
+                <p class="text-right text-sm text-stone-500 mb-4">${data.entreprise.ville}, le ${formatDate(new Date().toISOString())}</p>
+                <p class="mb-4">Objet : ${titres[niveau]}</p>
+                <div class="whitespace-pre-line text-sm leading-relaxed">${textes[niveau]}</div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Fermer</button>
+            <div class="flex gap-3">
+                ${client?.email ? `<button onclick="sendRelanceEmail('${f.numero}', ${niveau}, '${client.email}')" class="px-4 py-2.5 bg-blue-500 text-white rounded-xl font-medium">📧 Envoyer par email</button>` : ''}
+                <button onclick="printRelance('${f.numero}', ${niveau})" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer</button>
+            </div>
+        </div>
+    `;
+    
+    showModal(titres[niveau], content, 'max-w-3xl');
+}
+
+function sendRelanceEmail(factureNumero, niveau, email) {
+    const f = data.factures.find(x => x.numero === factureNumero);
+    const client = getClient(f.clientId);
+    
+    const sujets = {
+        1: `Rappel de paiement - Facture ${f.numero}`,
+        2: `Relance urgente - Facture impayée ${f.numero}`,
+        3: `MISE EN DEMEURE - Facture ${f.numero}`
+    };
+    
+    const corps = `Facture ${f.numero} - Montant: ${formatMoney(f.totalTTC)} - Échéance: ${formatDate(f.dateEcheance)}`;
+    
+    // Ouvrir le client mail
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(sujets[niveau])}&body=${encodeURIComponent(corps)}`;
+    window.open(mailtoLink);
+    
+    // Enregistrer la relance
+    if (!data.relances) data.relances = [];
+    data.relances.push({
+        factureNumero: f.numero,
+        clientNom: client?.nom || '-',
+        date: new Date().toISOString().split('T')[0],
+        type: 'email',
+        niveau: niveau
+    });
+    saveData();
+    
+    alert('Email préparé ! Votre client mail va s\'ouvrir.');
+    closeModal();
+    renderPage();
+}
+
+function printRelance(factureNumero, niveau) {
+    const f = data.factures.find(x => x.numero === factureNumero);
+    const client = getClient(f.clientId);
+    const joursRetard = Math.floor((new Date() - new Date(f.dateEcheance)) / (1000 * 60 * 60 * 24));
+    
+    const titres = { 1: 'PREMIÈRE RELANCE', 2: 'DEUXIÈME RELANCE', 3: 'MISE EN DEMEURE' };
+    const textes = {
+        1: `Sauf erreur de notre part, nous n'avons pas reçu le règlement de la facture référencée ci-dessous.\n\nFacture n° : ${f.numero}\nMontant : ${formatMoney(f.totalTTC)}\nÉchéance : ${formatDate(f.dateEcheance)}\n\nNous vous remercions de bien vouloir procéder au règlement dans les meilleurs délais.`,
+        2: `Malgré notre précédent rappel, notre facture n'a toujours pas été réglée.\n\nFacture n° : ${f.numero}\nMontant : ${formatMoney(f.totalTTC)}\nRetard : ${joursRetard} jours\n\nNous vous mettons en demeure de régler sous 8 jours.`,
+        3: `MISE EN DEMEURE\n\nNous vous mettons en demeure de nous régler ${formatMoney(f.totalTTC)} correspondant à la facture n° ${f.numero}.\n\nÀ défaut sous 8 jours, nous transmettrons ce dossier au contentieux.`
+    };
+
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Relance ${f.numero}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; font-size: 12px; line-height: 1.6; }
+                .header { margin-bottom: 50px; }
+                .expediteur { margin-bottom: 30px; }
+                .destinataire { margin-bottom: 30px; text-align: right; }
+                .date { text-align: right; margin-bottom: 30px; }
+                .objet { font-weight: bold; margin-bottom: 30px; ${niveau === 3 ? 'color: red;' : ''} }
+                .corps { white-space: pre-line; }
+                .signature { margin-top: 50px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="expediteur">
+                    ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:10px"><br>` : `<strong>${data.entreprise.nom}</strong><br>`}
+                    ${data.entreprise.adresse}<br>
+                    ${data.entreprise.codePostal} ${data.entreprise.ville}<br>
+                    Tél: ${data.entreprise.telephone}
+                </div>
+                <div class="destinataire">
+                    <strong>${client?.nom || '-'}</strong><br>
+                    ${client?.adresse || ''}<br>
+                    ${client?.codePostal || ''} ${client?.ville || ''}
+                </div>
+                <div class="date">${data.entreprise.ville}, le ${formatDate(new Date().toISOString())}</div>
+            </div>
+            <div class="objet">Objet : ${titres[niveau]}</div>
+            <div class="corps">Madame, Monsieur,\n\n${textes[niveau]}\n\nCordialement,</div>
+            <div class="signature">${data.entreprise.nom}</div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+
+    // Enregistrer
+    if (!data.relances) data.relances = [];
+    data.relances.push({
+        factureNumero: f.numero,
+        clientNom: client?.nom || '-',
+        date: new Date().toISOString().split('T')[0],
+        type: 'courrier',
+        niveau: niveau
+    });
+    saveData();
+}
+
+// ============================================
+// CHIFFRE D'AFFAIRES
+// ============================================
+function renderCA() {
+    const mois = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+    const caParMois = mois.map((nom, i) => {
+        const yearMonth = `${caYear}-${String(i + 1).padStart(2, '0')}`;
+        const facturesMois = data.factures.filter(f => {
+            const d = new Date(f.date);
+            return d.getFullYear() === caYear && d.getMonth() === i;
+        });
+        const ca = facturesMois.reduce((sum, f) => sum + (f.totalHT || 0), 0);
+        const taux = getTauxURSSAF(yearMonth);
+        return { mois: nom, yearMonth, ca, nbFactures: facturesMois.length, taux };
+    });
+
+    const totalAnnee = caParMois.reduce((sum, m) => sum + m.ca, 0);
+    const totalCotisations = caParMois.reduce((sum, m) => sum + (m.ca * m.taux / 100), 0);
+    const maxCA = Math.max(...caParMois.map(m => m.ca), 1);
+
+    return `
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">Chiffre d'Affaires ${caYear}</h2>
+                <div class="flex items-center gap-2">
+                    <button onclick="caYear--; renderPage()" class="p-2 hover:bg-stone-200 rounded-lg text-xl">◀</button>
+                    <span class="text-lg font-semibold w-20 text-center">${caYear}</span>
+                    <button onclick="caYear++; renderPage()" class="p-2 hover:bg-stone-200 rounded-lg text-xl">▶</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gradient-to-br from-amber-500 to-orange-500 text-white rounded-2xl p-6 shadow-lg">
+                    <p class="text-amber-100">CA Total ${caYear}</p>
+                    <p class="text-4xl font-bold mt-2">${formatMoney(totalAnnee)}</p>
+                </div>
+                <div class="bg-gradient-to-br from-stone-700 to-stone-800 text-white rounded-2xl p-6 shadow-lg">
+                    <p class="text-stone-300">Cotisations URSSAF estimées</p>
+                    <p class="text-4xl font-bold mt-2">${formatMoney(totalCotisations)}</p>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p class="text-sm text-blue-800">💡 <strong>Taux URSSAF par mois :</strong> Cliquez sur le taux pour le modifier individuellement. Le taux par défaut est ${(data.tauxURSSAFParMois['default'] || 23.20).toFixed(2).replace('.', ',')}%</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border">
+                <table class="w-full">
+                    <thead class="bg-stone-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Mois</th>
+                            <th class="px-4 py-3 text-right">CA HT</th>
+                            <th class="px-4 py-3 text-center">Taux URSSAF</th>
+                            <th class="px-4 py-3 text-right">Cotisations</th>
+                            <th class="px-4 py-3 text-center">Factures</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        ${caParMois.map(m => `
+                            <tr class="${m.ca > 0 ? 'bg-amber-50/30' : ''} hover:bg-amber-50/50">
+                                <td class="px-4 py-3 font-medium">${m.mois}</td>
+                                <td class="px-4 py-3 text-right font-medium">${formatMoney(m.ca)}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="editTauxMois('${m.yearMonth}', ${m.taux})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">
+                                        ${m.taux.toFixed(2).replace('.', ',')}%
+                                    </button>
+                                </td>
+                                <td class="px-4 py-3 text-right text-stone-600">${formatMoney(m.ca * m.taux / 100)}</td>
+                                <td class="px-4 py-3 text-center">${m.nbFactures}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot class="bg-stone-100 font-bold">
+                        <tr>
+                            <td class="px-4 py-3">TOTAL</td>
+                            <td class="px-4 py-3 text-right">${formatMoney(totalAnnee)}</td>
+                            <td class="px-4 py-3 text-center">-</td>
+                            <td class="px-4 py-3 text-right">${formatMoney(totalCotisations)}</td>
+                            <td class="px-4 py-3 text-center">${data.factures.filter(f => new Date(f.date).getFullYear() === caYear).length}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4">
+                ${[0, 1, 2, 3].map(q => {
+                    const caT = caParMois.slice(q * 3, q * 3 + 3).reduce((sum, m) => sum + m.ca, 0);
+                    const cotisT = caParMois.slice(q * 3, q * 3 + 3).reduce((sum, m) => sum + (m.ca * m.taux / 100), 0);
+                    const trimLabels = ['1er trimestre', '2ème trimestre', '3ème trimestre', '4ème trimestre'];
+                    return `<div class="bg-white rounded-xl p-4 border shadow-sm">
+                        <p class="text-sm text-stone-500">${trimLabels[q]} ${caYear}</p>
+                        <p class="text-xl font-bold text-stone-800">${formatMoney(caT)}</p>
+                        <p class="text-sm text-stone-500">Cotisations : ${formatMoney(cotisT)}</p>
+                    </div>`;
+                }).join('')}
+            </div>
+
+            <!-- Graphique à barres -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                <h3 class="text-lg font-bold text-stone-800 mb-4">📊 Évolution du Chiffre d'Affaires ${caYear}</h3>
+                <div class="relative" style="height: 300px;">
+                    <!-- Lignes de grille horizontales -->
+                    <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                        ${[...Array(6)].map((_, i) => `
+                            <div class="flex items-center w-full border-b border-stone-200">
+                                <span class="text-xs text-stone-400 w-16 text-right pr-2">${formatMoney(maxCA * (5-i) / 5)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <!-- Barres -->
+                    <div class="absolute bottom-6 left-16 right-4 top-0 flex items-end justify-around gap-1">
+                        ${caParMois.map(m => {
+                            const heightPct = maxCA > 0 ? (m.ca / maxCA * 100) : 0;
+                            const hasData = m.ca > 0;
+                            return `
+                                <div class="flex flex-col items-center flex-1" style="height: 100%;">
+                                    <div class="flex-1 w-full flex flex-col justify-end items-center">
+                                        ${hasData ? `<span class="text-xs font-semibold text-stone-700 mb-1">${m.ca.toFixed(2).replace('.', ',')}€</span>` : ''}
+                                        <div class="w-full max-w-12 rounded-t-lg transition-all ${hasData ? 'bg-gradient-to-t from-blue-600 to-blue-400' : 'bg-stone-200'}" 
+                                             style="height: ${hasData ? Math.max(heightPct, 2) : 2}%;">
+                                        </div>
+                                    </div>
+                                    <span class="text-xs text-stone-600 mt-2 font-medium">${m.mois.substring(0, 3).toUpperCase()}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                        <!-- Barre Total -->
+                        <div class="flex flex-col items-center flex-1 ml-4 pl-4 border-l-2 border-stone-300" style="height: 100%;">
+                            <div class="flex-1 w-full flex flex-col justify-end items-center">
+                                <span class="text-xs font-bold text-amber-700 mb-1">${totalAnnee.toFixed(2).replace('.', ',')}€</span>
+                                <div class="w-full max-w-12 rounded-t-lg bg-gradient-to-t from-amber-500 to-orange-400" 
+                                     style="height: ${maxCA > 0 ? Math.min(totalAnnee / maxCA * 100, 100) : 0}%;">
+                                </div>
+                            </div>
+                            <span class="text-xs text-amber-700 mt-2 font-bold">TOTAL</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function editTauxMois(yearMonth, currentTaux) {
+    const moisNom = new Date(yearMonth + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const content = `
+        <div class="space-y-4">
+            <p>Modifier le taux URSSAF pour <strong>${moisNom}</strong></p>
+            <div>
+                <label class="block text-sm font-medium text-stone-600 mb-1">Taux (%)</label>
+                <input type="number" step="0.01" id="taux-mois" value="${currentTaux}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+                <p><strong>Rappel des taux courants :</strong></p>
+                <ul class="mt-1 space-y-1">
+                    <li>• Vente de marchandises : 12,30%</li>
+                    <li>• Prestations de services BIC : 21,20%</li>
+                    <li>• Prestations de services BNC : 21,10%</li>
+                    <li>• Activités libérales : 21,10%</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveTauxMois('${yearMonth}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer</button>
+        </div>
+    `;
+    showModal('Taux URSSAF - ' + moisNom, content, 'max-w-md');
+}
+
+function saveTauxMois(yearMonth) {
+    const taux = parseFloat(document.getElementById('taux-mois').value) || 0;
+    setTauxURSSAF(yearMonth, taux);
+    closeModal();
+    renderPage();
+}
+
+// ============================================
+// PARAMÈTRES
+// ============================================
+function renderSettings() {
+    const e = data.entreprise;
+    return `
+        <div class="space-y-6 max-w-4xl">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-stone-800">⚙️ Paramètres</h2>
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">🔓 Mode Admin</span>
+            </div>
+            
+            <!-- Version et Mot de passe Admin -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                    <h3 class="font-semibold text-stone-700 mb-3">🔢 Version de l'application</h3>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="version-major" value="${data.version.split('.')[0]}" min="0" class="w-16 px-2 py-2 border border-stone-300 rounded-lg text-center text-lg font-bold">
+                            <span class="text-2xl text-stone-400">.</span>
+                            <input type="number" id="version-minor" value="${data.version.split('.')[1]}" min="0" class="w-16 px-2 py-2 border border-stone-300 rounded-lg text-center text-lg font-bold">
+                            <span class="text-2xl text-stone-400">.</span>
+                            <input type="number" id="version-patch" value="${data.version.split('.')[2]}" min="0" class="w-16 px-2 py-2 border border-stone-300 rounded-lg text-center text-lg font-bold">
+                        </div>
+                        <button onclick="saveVersionDirect()" class="btn-primary text-white px-4 py-2 rounded-lg">💾</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                    <h3 class="font-semibold text-stone-700 mb-3">🔐 Mot de passe Admin</h3>
+                    <button onclick="openChangePasswordModal()" class="w-full px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200">
+                        Changer le mot de passe
+                    </button>
+                    <p class="text-xs text-stone-500 mt-2">Protège l'accès à cette page</p>
+                </div>
+            </div>
+            
+            <!-- Logo -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                <h3 class="font-semibold text-stone-700 mb-4">🖼️ Logo de l'entreprise</h3>
+                <div class="flex items-center gap-6">
+                    <div class="w-48 h-24 border-2 border-dashed border-stone-300 rounded-xl flex items-center justify-center bg-stone-50">
+                        ${data.logo ? `<img src="${data.logo}" class="max-h-20 max-w-44">` : `<span class="text-stone-400">Aucun logo</span>`}
+                    </div>
+                    <div class="space-y-2">
+                        <input type="file" id="logo-input" accept="image/*" onchange="uploadLogo(event)" class="hidden">
+                        <button onclick="document.getElementById('logo-input').click()" class="btn-primary text-white px-4 py-2 rounded-lg">📤 Charger un logo</button>
+                        ${data.logo ? `<button onclick="removeLogo()" class="block text-red-500 text-sm hover:underline">Supprimer le logo</button>` : ''}
+                        <p class="text-xs text-stone-500">Format recommandé : PNG ou JPG, max 200x80px</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entreprise -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border space-y-6">
+                <h3 class="font-semibold text-stone-700 border-b pb-2">🏢 Informations entreprise</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Nom</label>
+                        <input type="text" id="ent-nom" value="${e.nom}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Complément</label>
+                        <input type="text" id="ent-complement" value="${e.complement}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div class="col-span-2"><label class="block text-sm font-medium text-stone-600 mb-1">Adresse</label>
+                        <input type="text" id="ent-adresse" value="${e.adresse}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Code postal</label>
+                        <input type="text" id="ent-cp" value="${e.codePostal}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Ville</label>
+                        <input type="text" id="ent-ville" value="${e.ville}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Téléphone</label>
+                        <input type="text" id="ent-tel" value="${e.telephone}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">Email</label>
+                        <input type="email" id="ent-email" value="${e.email || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                </div>
+                
+                <h3 class="font-semibold text-stone-700 border-b pb-2 pt-4">📋 Informations légales</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">SIRET</label>
+                        <input type="text" id="ent-siret" value="${e.siret}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">RCS / Code APE</label>
+                        <input type="text" id="ent-rcs" value="${e.rcs}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                </div>
+                
+                <h3 class="font-semibold text-stone-700 border-b pb-2 pt-4">🏦 Coordonnées bancaires</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">IBAN</label>
+                        <input type="text" id="ent-iban" value="${e.iban}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                    <div><label class="block text-sm font-medium text-stone-600 mb-1">BIC</label>
+                        <input type="text" id="ent-bic" value="${e.bic}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                </div>
+
+                <h3 class="font-semibold text-stone-700 border-b pb-2 pt-4">💶 TVA et cotisations</h3>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" id="ent-exonere" ${e.exonereTVA ? 'checked' : ''} class="w-5 h-5 rounded text-amber-500">
+                    <span>Exonéré de TVA (micro-entreprise, article 293B du CGI)</span>
+                </label>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-stone-600 mb-1">Taux URSSAF par défaut (%)</label>
+                    <input type="number" step="0.01" id="ent-urssaf-default" value="${data.tauxURSSAFParMois['default'] || 23.20}" class="w-40 px-4 py-2.5 border border-stone-300 rounded-xl">
+                </div>
+
+                <h3 class="font-semibold text-stone-700 border-b pb-2 pt-4">🔐 Sécurité</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Mot de passe actuel</label>
+                        <input type="password" id="old-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl" placeholder="Mot de passe actuel">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Nouveau mot de passe</label>
+                        <input type="password" id="new-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl" placeholder="Nouveau mot de passe">
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button onclick="changePassword()" class="px-4 py-2 bg-blue-500 text-white rounded-xl font-medium text-sm">Changer le mot de passe</button>
+                </div>
+
+                <div class="flex justify-between pt-4">
+                    <button onclick="resetData()" class="px-4 py-2.5 bg-red-500 text-white rounded-xl font-medium">🔄 Réinitialiser</button>
+                    <button onclick="saveSettings()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">✓ Enregistrer</button>
+                </div>
+            </div>
+
+            <!-- CGV -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                <h3 class="font-semibold text-stone-700 mb-4">📜 Conditions Générales de Vente</h3>
+                <textarea id="cgv-text" rows="15" class="w-full px-4 py-3 border border-stone-300 rounded-xl text-sm">${data.cgv}</textarea>
+                <div class="flex justify-end mt-4">
+                    <button onclick="saveCGV()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer les CGV</button>
+                </div>
+            </div>
+
+            <!-- Firebase -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border">
+                <h3 class="font-semibold text-stone-700 mb-4">☁️ Synchronisation Firebase (optionnel)</h3>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                    <p class="text-sm text-blue-800">
+                        <strong>Pour activer Firebase :</strong><br>
+                        1. Créez un projet sur <a href="https://console.firebase.google.com" target="_blank" class="underline">Firebase Console</a><br>
+                        2. Activez Firestore Database<br>
+                        3. Copiez les informations de configuration ci-dessous<br>
+                        4. La synchronisation sera automatique après sauvegarde
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">API Key</label>
+                        <input type="text" id="fb-apiKey" value="${data.firebase?.apiKey || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm" placeholder="AIzaSy...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Project ID</label>
+                        <input type="text" id="fb-projectId" value="${data.firebase?.projectId || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm" placeholder="mon-projet">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Auth Domain</label>
+                        <input type="text" id="fb-authDomain" value="${data.firebase?.authDomain || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm" placeholder="mon-projet.firebaseapp.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-600 mb-1">Storage Bucket</label>
+                        <input type="text" id="fb-storageBucket" value="${data.firebase?.storageBucket || ''}" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-sm" placeholder="mon-projet.appspot.com">
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-4">
+                    <span id="firebase-status" class="text-sm ${data.firebase?.apiKey ? 'text-green-600' : 'text-stone-400'}">
+                        ${data.firebase?.apiKey ? '✓ Firebase configuré' : '○ Non configuré'}
+                    </span>
+                    <button onclick="saveFirebaseConfig()" class="px-4 py-2 bg-orange-500 text-white rounded-xl font-medium text-sm">Sauvegarder Firebase</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function saveVersionDirect() {
+    const major = document.getElementById('version-major').value || '0';
+    const minor = document.getElementById('version-minor').value || '0';
+    const patch = document.getElementById('version-patch').value || '0';
+    data.version = `${major}.${minor}.${patch}`;
+    saveData();
+    updateSidebarLogo();
+    alert('Version mise à jour : v' + data.version);
+}
+
+function uploadLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            data.logo = e.target.result;
+            saveData();
+            renderPage();
+            updateSidebarLogo();
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeLogo() {
+    if (confirm('Supprimer le logo ?')) {
+        data.logo = null;
+        saveData();
+        renderPage();
+        updateSidebarLogo();
+    }
+}
+
+function openChangePasswordModal() {
+    const content = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-stone-600 mb-1">Mot de passe actuel</label>
+                <input type="password" id="old-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-stone-600 mb-1">Nouveau mot de passe</label>
+                <input type="password" id="new-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-stone-600 mb-1">Confirmer le nouveau mot de passe</label>
+                <input type="password" id="confirm-password" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="changePassword()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Changer</button>
+        </div>
+    `;
+    showModal('Changer le mot de passe', content, 'max-w-md');
+}
+
+function changePassword() {
+    const oldPwd = document.getElementById('old-password').value;
+    const newPwd = document.getElementById('new-password').value;
+    const confirmPwdEl = document.getElementById('confirm-password');
+    const confirmPwd = confirmPwdEl ? confirmPwdEl.value : newPwd;
+
+    if (oldPwd !== data.adminPassword) {
+        alert('Mot de passe actuel incorrect !');
+        return;
+    }
+    if (newPwd !== confirmPwd) {
+        alert('Les nouveaux mots de passe ne correspondent pas !');
+        return;
+    }
+    if (newPwd.length < 4) {
+        alert('Le mot de passe doit faire au moins 4 caractères !');
+        return;
+    }
+
+    data.adminPassword = newPwd;
+    saveData();
+    closeModal();
+    document.getElementById('old-password').value = '';
+    document.getElementById('new-password').value = '';
+    alert('Mot de passe modifié avec succès !');
+}
+
+function saveSettings() {
+    data.entreprise = {
+        nom: document.getElementById('ent-nom').value,
+        complement: document.getElementById('ent-complement').value,
+        adresse: document.getElementById('ent-adresse').value,
+        codePostal: document.getElementById('ent-cp').value,
+        ville: document.getElementById('ent-ville').value,
+        telephone: document.getElementById('ent-tel').value,
+        email: document.getElementById('ent-email').value,
+        siret: document.getElementById('ent-siret').value,
+        rcs: document.getElementById('ent-rcs').value,
+        iban: document.getElementById('ent-iban').value,
+        bic: document.getElementById('ent-bic').value,
+        exonereTVA: document.getElementById('ent-exonere').checked
+    };
+    data.tauxURSSAFParMois['default'] = parseFloat(document.getElementById('ent-urssaf-default').value) || 23.20;
+    saveData();
+    updateSidebarLogo();
+    alert('Paramètres enregistrés !');
+}
+
+function saveCGV() {
+    data.cgv = document.getElementById('cgv-text').value;
+    saveData();
+    alert('CGV enregistrées !');
+}
+
+function saveFirebaseConfig() {
+    data.firebase = {
+        apiKey: document.getElementById('fb-apiKey').value,
+        projectId: document.getElementById('fb-projectId').value,
+        authDomain: document.getElementById('fb-authDomain').value,
+        storageBucket: document.getElementById('fb-storageBucket').value
+    };
+    saveData();
+    
+    // Recharger la page pour initialiser Firebase avec la nouvelle config
+    if (data.firebase.apiKey) {
+        alert('Configuration Firebase sauvegardée !\nLa page va se recharger pour activer la synchronisation.');
+        location.reload();
+    } else {
+        alert('Configuration Firebase supprimée.');
+        renderPage();
+    }
+}
+
+function resetData() {
+    if (confirm('⚠️ ATTENTION !\n\nCela va réinitialiser TOUTES les données.\nContinuer ?')) {
+        localStorage.removeItem('facturier_stylemoi_v3');
+        location.reload();
+    }
+}
+
+// ============================================
+// RENDU PRINCIPAL
+// ============================================
+function renderPage() {
+    const main = document.getElementById('main-content');
+    switch (currentTab) {
+        case 'dashboard': main.innerHTML = renderDashboard(); break;
+        case 'clients': main.innerHTML = renderClients(); break;
+        case 'produits': main.innerHTML = renderProduits(); break;
+        case 'devis': main.innerHTML = renderDevis(); break;
+        case 'factures': main.innerHTML = renderFactures(); break;
+        case 'paiements': main.innerHTML = renderPaiements(); break;
+        case 'relances': main.innerHTML = renderRelances(); break;
+        case 'ca': main.innerHTML = renderCA(); break;
+        case 'settings': main.innerHTML = renderSettings(); break;
+        default: main.innerHTML = renderDashboard();
+    }
+}
+
+// ============================================
+// INITIALISATION
+// ============================================
+// ============================================
+// INITIALISATION
+// ============================================
+function init() {
+    loadData();
+    
+    // Initialiser Firebase si configuré dans les données
+    if (data.firebase && data.firebase.apiKey && !db) {
+        try {
+            firebase.initializeApp({
+                apiKey: data.firebase.apiKey,
+                authDomain: data.firebase.authDomain,
+                projectId: data.firebase.projectId,
+                storageBucket: data.firebase.storageBucket
+            });
+            db = firebase.firestore();
+            console.log('Firebase initialisé');
+        } catch(e) {
+            console.log('Firebase déjà initialisé ou erreur:', e);
+        }
+    }
+    
+    renderNav();
+    renderPage();
+    updateSidebarLogo();
+}
+
+document.getElementById('modal-container').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
