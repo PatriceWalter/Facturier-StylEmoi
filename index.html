@@ -1474,7 +1474,8 @@ function openFactureModal(numero = null) {
 
 function renderFactureModal() {
     const f = currentFacture;
-    const client = f.paiementComptoir ? null : getClient(f.clientId);
+    const isDevis = f.numero.startsWith('D');
+    const client = f.paiementComptoir && !isDevis ? null : getClient(f.clientId);
     
     const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
     const totalHTRemise = totalHT * (1 - f.remise / 100);
@@ -1488,7 +1489,8 @@ function renderFactureModal() {
                     <p class="text-sm text-stone-600">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
                 </div>
                 <div class="space-y-3">
-                    <!-- Case Paiement Comptoir -->
+                    ${!isDevis ? `
+                    <!-- Case Paiement Comptoir (seulement pour factures) -->
                     <label class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
                         <input type="checkbox" id="facture-comptoir" ${f.paiementComptoir ? 'checked' : ''} onchange="currentFacture.paiementComptoir = this.checked; if(this.checked) currentFacture.clientId = ''; renderFactureModal()" class="w-5 h-5 rounded text-amber-500">
                         <div>
@@ -1496,8 +1498,9 @@ function renderFactureModal() {
                             <p class="text-xs text-amber-600">Vente directe sans client enregistré</p>
                         </div>
                     </label>
+                    ` : ''}
                     
-                    ${!f.paiementComptoir ? `
+                    ${!f.paiementComptoir || isDevis ? `
                         <label class="block text-sm font-medium text-stone-600 mb-1">Client</label>
                         <div class="relative">
                             <input type="text" id="client-search" placeholder="Rechercher un client..." 
@@ -1509,7 +1512,7 @@ function renderFactureModal() {
                         <select id="facture-client" onchange="currentFacture.clientId = this.value; renderFactureModal()" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
                             ${data.clients.map(c => `<option value="${c.numero}" ${f.clientId === c.numero ? 'selected' : ''}>${c.numero} - ${c.nom}</option>`).join('')}
                         </select>
-                        ${client ? `<div class="bg-amber-50 rounded-xl p-3 text-sm mt-2"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
+                        ${client ? `<div class="${isDevis ? 'bg-blue-50' : 'bg-amber-50'} rounded-xl p-3 text-sm mt-2"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
                     ` : `
                         <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm">
                             <p class="font-medium text-green-800">✓ Paiement comptoir</p>
@@ -1519,11 +1522,11 @@ function renderFactureModal() {
                 </div>
             </div>
             <div class="grid grid-cols-4 gap-4">
-                <div><label class="block text-sm font-medium text-stone-600 mb-1">N° Facture</label>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">${isDevis ? 'N° Devis' : 'N° Facture'}</label>
                     <input type="text" value="${f.numero}" disabled class="w-full px-4 py-2.5 border border-stone-300 rounded-xl bg-stone-100"></div>
                 <div><label class="block text-sm font-medium text-stone-600 mb-1">Date</label>
                     <input type="date" id="facture-date" value="${f.date}" onchange="currentFacture.date = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
-                <div><label class="block text-sm font-medium text-stone-600 mb-1">Échéance</label>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">${isDevis ? 'Validité' : 'Échéance'}</label>
                     <input type="date" id="facture-echeance" value="${f.dateEcheance}" onchange="currentFacture.dateEcheance = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
                 <div><label class="block text-sm font-medium text-stone-600 mb-1">Mode règlement</label>
                     <select id="facture-reglement" onchange="currentFacture.modeReglement = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
@@ -1532,7 +1535,7 @@ function renderFactureModal() {
             </div>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-semibold text-stone-800">Lignes de facture</h3>
+                    <h3 class="font-semibold text-stone-800">${isDevis ? 'Lignes de devis' : 'Lignes de facture'}</h3>
                     <button onclick="showProductPicker()" class="btn-primary text-white px-3 py-1.5 rounded-lg text-sm">+ Ajouter produit</button>
                 </div>
                 <div id="product-picker" class="hidden bg-stone-50 rounded-xl p-4 space-y-3">
@@ -1576,7 +1579,7 @@ function renderFactureModal() {
                     </div>
                     ${f.remise > 0 ? `<div class="flex justify-between text-sm text-red-600"><span>Après remise</span><span>${formatMoney(totalHTRemise)}</span></div>` : ''}
                     <div class="flex justify-between text-lg font-bold border-t border-stone-300 pt-2">
-                        <span>Total TTC</span><span class="text-amber-600">${formatMoney(totalTTC)}</span>
+                        <span>Total TTC</span><span class="${isDevis ? 'text-blue-600' : 'text-amber-600'}">${formatMoney(totalTTC)}</span>
                     </div>
                 </div>
             </div>
@@ -1584,10 +1587,10 @@ function renderFactureModal() {
         </div>
         <div class="flex justify-end gap-3 mt-6">
             <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
-            <button onclick="saveFacture()" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer</button>
+            <button onclick="${isDevis ? 'saveDevis()' : 'saveFacture()'}" class="${isDevis ? 'bg-blue-600 hover:bg-blue-700' : 'btn-primary'} text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer</button>
         </div>
     `;
-    showModal('Facture ' + currentFacture.numero, content, 'max-w-4xl');
+    showModal((isDevis ? 'Devis ' : 'Facture ') + currentFacture.numero, content, 'max-w-4xl');
 }
 
 function filterClients(query) {
@@ -1923,24 +1926,6 @@ function openDevisModal() {
 
 function renderDevisModal() {
     renderFactureModal();
-    // Changer le titre
-    document.querySelector('#modal-content h2').textContent = 'Devis ' + currentFacture.numero;
-    // Cacher la case paiement comptoir (pas de sens pour un devis)
-    const comptoir = document.getElementById('facture-comptoir');
-    if (comptoir) comptoir.closest('label').style.display = 'none';
-    // Corriger les labels
-    const labels = document.querySelectorAll('#modal-content label');
-    labels.forEach(label => {
-        if (label.textContent.includes('N° Facture')) label.textContent = 'N° Devis';
-        if (label.textContent.includes('Échéance')) label.textContent = 'Validité';
-    });
-    const h3s = document.querySelectorAll('#modal-content h3');
-    h3s.forEach(h3 => {
-        if (h3.textContent.includes('Lignes de facture')) h3.textContent = 'Lignes de devis';
-    });
-    // Changer le bouton enregistrer
-    const saveBtn = Array.from(document.querySelectorAll('#modal-content button')).find(b => b.textContent.includes('Enregistrer'));
-    if (saveBtn) saveBtn.onclick = saveDevis;
 }
 
 function saveDevis() {
