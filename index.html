@@ -485,6 +485,7 @@ function loadData() {
 
 function applyDataMigrations() {
     // Migration des anciennes données
+    if (!data.devis) data.devis = [];
     if (!data.tauxURSSAFParMois) data.tauxURSSAFParMois = { 'default': 23.20 };
     if (!data.relances) data.relances = [];
     if (!data.cgv) data.cgv = defaultData.cgv;
