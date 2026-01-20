@@ -58,11 +58,6 @@
                 <p class="text-stone-400 text-sm mt-1" id="version-display">v3.0.0</p>
             </div>
             <nav class="flex-1 p-4 space-y-1" id="nav-menu"></nav>
-            <div class="p-4 border-t border-stone-700">
-                <button onclick="logout()" class="w-full flex items-center gap-2 px-4 py-2 text-stone-400 hover:text-white hover:bg-stone-700 rounded-lg transition-colors">
-                    <span>🚪</span> Déconnexion
-                </button>
-            </div>
             <div class="p-4 border-t border-stone-700 text-stone-400 text-xs">© 2024 Styl'Emoi</div>
         </aside>
 
@@ -711,6 +706,7 @@ const menuItems = [
     { id: 'relances', icon: '📬', label: 'Lettres de relance' },
     { id: 'ca', icon: '💰', label: "Chiffre d'affaires" },
     { id: 'settings', icon: '⚙️', label: 'Paramètres' },
+    { id: 'logout', icon: '🚪', label: 'Déconnexion' },
 ];
 
 function renderNav() {
@@ -738,6 +734,10 @@ function updateSidebarLogo() {
 }
 
 function navigateTo(tab) {
+    if (tab === 'logout') {
+        logout();
+        return;
+    }
     if (tab === 'settings') {
         // Demander le mot de passe admin pour accéder aux paramètres
         askAdminPassword(() => {
@@ -1510,10 +1510,17 @@ function renderFactureModal() {
                     
                     ${!f.paiementComptoir ? `
                         <label class="block text-sm font-medium text-stone-600 mb-1">Client</label>
+                        <div class="relative">
+                            <input type="text" id="client-search" placeholder="Rechercher un client..." 
+                                   oninput="filterClients(this.value)" 
+                                   onfocus="showClientSuggestions()" 
+                                   class="w-full px-4 py-2.5 border border-stone-300 rounded-xl mb-2">
+                            <div id="client-suggestions" class="hidden absolute z-50 w-full bg-white border border-stone-300 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+                        </div>
                         <select id="facture-client" onchange="currentFacture.clientId = this.value; renderFactureModal()" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
                             ${data.clients.map(c => `<option value="${c.numero}" ${f.clientId === c.numero ? 'selected' : ''}>${c.numero} - ${c.nom}</option>`).join('')}
                         </select>
-                        ${client ? `<div class="bg-amber-50 rounded-xl p-3 text-sm"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
+                        ${client ? `<div class="bg-amber-50 rounded-xl p-3 text-sm mt-2"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
                     ` : `
                         <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm">
                             <p class="font-medium text-green-800">✓ Paiement comptoir</p>
@@ -1593,6 +1600,59 @@ function renderFactureModal() {
     `;
     showModal('Facture ' + currentFacture.numero, content, 'max-w-4xl');
 }
+
+// Recherche rapide client
+function filterClients(query) {
+    const suggestions = document.getElementById('client-suggestions');
+    if (!query || query.length < 1) {
+        suggestions.classList.add('hidden');
+        return;
+    }
+    
+    const q = query.toLowerCase();
+    const filtered = data.clients.filter(c => 
+        c.nom.toLowerCase().includes(q) || 
+        c.numero.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.telephone && c.telephone.includes(q))
+    ).slice(0, 8);
+    
+    if (filtered.length > 0) {
+        suggestions.innerHTML = filtered.map(c => `
+            <div onclick="selectClient('${c.numero}')" 
+                 class="px-4 py-2 hover:bg-amber-50 cursor-pointer border-b border-stone-100 last:border-0">
+                <span class="font-medium text-amber-600">${c.numero}</span> - ${c.nom}
+                ${c.ville ? `<span class="text-stone-400 text-sm ml-2">(${c.ville})</span>` : ''}
+            </div>
+        `).join('');
+        suggestions.classList.remove('hidden');
+    } else {
+        suggestions.classList.add('hidden');
+    }
+}
+
+function showClientSuggestions() {
+    const input = document.getElementById('client-search');
+    if (input.value.length >= 1) {
+        filterClients(input.value);
+    }
+}
+
+function selectClient(numero) {
+    currentFacture.clientId = numero;
+    document.getElementById('client-suggestions').classList.add('hidden');
+    document.getElementById('client-search').value = '';
+    renderFactureModal();
+}
+
+// Fermer les suggestions si on clique ailleurs
+document.addEventListener('click', function(e) {
+    const suggestions = document.getElementById('client-suggestions');
+    const searchInput = document.getElementById('client-search');
+    if (suggestions && searchInput && !suggestions.contains(e.target) && e.target !== searchInput) {
+        suggestions.classList.add('hidden');
+    }
+});
 
 function showProductPicker() {
     document.getElementById('product-picker').classList.remove('hidden');
