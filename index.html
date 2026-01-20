@@ -1923,10 +1923,22 @@ function openDevisModal() {
 
 function renderDevisModal() {
     renderFactureModal();
+    // Changer le titre
     document.querySelector('#modal-content h2').textContent = 'Devis ' + currentFacture.numero;
     // Cacher la case paiement comptoir (pas de sens pour un devis)
     const comptoir = document.getElementById('facture-comptoir');
     if (comptoir) comptoir.closest('label').style.display = 'none';
+    // Corriger les labels
+    const labels = document.querySelectorAll('#modal-content label');
+    labels.forEach(label => {
+        if (label.textContent.includes('N° Facture')) label.textContent = 'N° Devis';
+        if (label.textContent.includes('Échéance')) label.textContent = 'Validité';
+    });
+    const h3s = document.querySelectorAll('#modal-content h3');
+    h3s.forEach(h3 => {
+        if (h3.textContent.includes('Lignes de facture')) h3.textContent = 'Lignes de devis';
+    });
+    // Changer le bouton enregistrer
     const saveBtn = Array.from(document.querySelectorAll('#modal-content button')).find(b => b.textContent.includes('Enregistrer'));
     if (saveBtn) saveBtn.onclick = saveDevis;
 }
