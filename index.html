@@ -49,15 +49,15 @@
     </div>
 
     <div id="app" class="hidden flex min-h-screen">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-gradient-to-b from-stone-900 to-stone-800 text-white flex flex-col min-h-screen no-print">
+        <!-- Sidebar FIXE -->
+        <aside class="w-64 bg-gradient-to-b from-stone-900 to-stone-800 text-white flex flex-col h-screen sticky top-0 no-print">
             <div class="p-6 border-b border-stone-700">
                 <div id="sidebar-logo" class="logo-container cursor-pointer" onclick="navigateTo('settings')" title="Cliquez pour changer le logo">
                     <!-- Logo ou texte par défaut -->
                 </div>
                 <p class="text-stone-400 text-sm mt-1" id="version-display">v3.0.0</p>
             </div>
-            <nav class="flex-1 p-4 space-y-1" id="nav-menu"></nav>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="nav-menu"></nav>
             <div class="p-4 border-t border-stone-700 text-stone-400 text-xs">© 2024 Styl'Emoi</div>
         </aside>
 
@@ -67,7 +67,7 @@
 
     <!-- Modal Container -->
     <div id="modal-container" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div id="modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"></div>
+        <div id="modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"></div>
     </div>
 
     <!-- Zone d'impression cachée -->
@@ -1946,10 +1946,197 @@ function openDevisModal() {
 }
 
 function renderDevisModal() {
-    renderFactureModal();
-    document.querySelector('#modal-content h2').textContent = 'Devis ' + currentFacture.numero;
-    const saveBtn = Array.from(document.querySelectorAll('#modal-content button')).find(b => b.textContent.includes('Enregistrer'));
-    if (saveBtn) saveBtn.onclick = saveDevis;
+    const f = currentFacture;
+    const client = getClient(f.clientId);
+    
+    const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
+    const totalHTRemise = totalHT * (1 - f.remise / 100);
+    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+
+    const content = `
+        <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-stone-50 rounded-xl p-4">
+                    <h3 class="font-semibold text-stone-800 mb-2">${data.entreprise.nom}</h3>
+                    <p class="text-sm text-stone-600">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
+                </div>
+                <div class="space-y-3">
+                    <label class="block text-sm font-medium text-stone-600 mb-1">Client</label>
+                    <div class="relative">
+                        <input type="text" id="devis-client-search" placeholder="Rechercher un client..." 
+                               oninput="filterClientsDevis(this.value)" 
+                               onfocus="showClientSuggestionsDevis()" 
+                               class="w-full px-4 py-2.5 border border-stone-300 rounded-xl mb-2">
+                        <div id="devis-client-suggestions" class="hidden absolute z-50 w-full bg-white border border-stone-300 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+                    </div>
+                    <select id="devis-client" onchange="currentFacture.clientId = this.value; renderDevisModal()" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                        ${data.clients.map(c => `<option value="${c.numero}" ${f.clientId === c.numero ? 'selected' : ''}>${c.numero} - ${c.nom}</option>`).join('')}
+                    </select>
+                    ${client ? `<div class="bg-blue-50 rounded-xl p-3 text-sm mt-2"><p class="font-medium">${client.nom}</p><p class="text-stone-600">${client.adresse || ''}</p><p class="text-stone-600">${client.codePostal || ''} ${client.ville || ''}</p></div>` : ''}
+                </div>
+            </div>
+            <div class="grid grid-cols-4 gap-4">
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">N° Devis</label>
+                    <input type="text" value="${f.numero}" disabled class="w-full px-4 py-2.5 border border-stone-300 rounded-xl bg-stone-100"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Date</label>
+                    <input type="date" id="devis-date" value="${f.date}" onchange="currentFacture.date = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Validité</label>
+                    <input type="date" id="devis-validite" value="${f.dateEcheance}" onchange="currentFacture.dateEcheance = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl"></div>
+                <div><label class="block text-sm font-medium text-stone-600 mb-1">Mode règlement</label>
+                    <select id="devis-reglement" onchange="currentFacture.modeReglement = this.value" class="w-full px-4 py-2.5 border border-stone-300 rounded-xl">
+                        ${data.moyensReglement.map(m => `<option value="${m}" ${f.modeReglement === m ? 'selected' : ''}>${m}</option>`).join('')}
+                    </select></div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-stone-800">Lignes du devis</h3>
+                    <button onclick="showProductPickerDevis()" class="btn-primary text-white px-3 py-1.5 rounded-lg text-sm">+ Ajouter produit</button>
+                </div>
+                <div id="devis-product-picker" class="hidden bg-stone-50 rounded-xl p-4 space-y-3">
+                    <input type="text" id="devis-product-search" placeholder="Rechercher un produit..." oninput="filterProductsDevis(this.value)" class="w-full px-4 py-2 border border-stone-300 rounded-lg">
+                    <div id="devis-product-list" class="max-h-48 overflow-y-auto space-y-1"></div>
+                </div>
+                <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-stone-100">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-sm">Réf.</th>
+                                <th class="px-3 py-2 text-left text-sm">Description</th>
+                                <th class="px-3 py-2 text-right text-sm">Prix HT</th>
+                                <th class="px-3 py-2 text-center text-sm w-20">Qté</th>
+                                <th class="px-3 py-2 text-right text-sm">Total</th>
+                                <th class="px-3 py-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-100">
+                            ${f.lignes.length === 0 ? '<tr><td colspan="6" class="px-4 py-6 text-center text-stone-400">Aucun produit</td></tr>' :
+                            f.lignes.map((l, i) => `
+                                <tr>
+                                    <td class="px-3 py-2 text-sm">${l.reference}</td>
+                                    <td class="px-3 py-2 text-sm">${l.description}</td>
+                                    <td class="px-3 py-2 text-sm text-right">${formatMoney(l.prixHT)}</td>
+                                    <td class="px-3 py-2"><input type="number" min="1" value="${l.quantite}" onchange="updateLigneQteDevis(${i}, this.value)" class="w-16 text-center border border-stone-300 rounded px-2 py-1"></td>
+                                    <td class="px-3 py-2 text-sm text-right font-medium">${formatMoney(l.prixHT * l.quantite)}</td>
+                                    <td class="px-3 py-2"><button onclick="removeLigneDevis(${i})" class="text-red-500 hover:bg-red-50 p-1 rounded">✕</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <div class="w-72 space-y-2 bg-stone-50 rounded-xl p-4">
+                    <div class="flex justify-between text-sm"><span>Total HT</span><span class="font-medium">${formatMoney(totalHT)}</span></div>
+                    <div class="flex justify-between text-sm items-center">
+                        <span>Remise (%)</span>
+                        <input type="number" min="0" max="100" value="${f.remise}" onchange="currentFacture.remise = parseFloat(this.value) || 0; renderDevisModal()" class="w-16 text-right border border-stone-300 rounded px-2 py-1">
+                    </div>
+                    ${f.remise > 0 ? `<div class="flex justify-between text-sm text-red-600"><span>Après remise</span><span>${formatMoney(totalHTRemise)}</span></div>` : ''}
+                    <div class="flex justify-between text-lg font-bold border-t border-stone-300 pt-2">
+                        <span>Total TTC</span><span class="text-blue-600">${formatMoney(totalTTC)}</span>
+                    </div>
+                </div>
+            </div>
+            ${data.entreprise.exonereTVA ? '<div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-sm text-blue-800">TVA non applicable, article 293B du CGI</div>' : ''}
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+            <button onclick="saveDevis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">Enregistrer le devis</button>
+        </div>
+    `;
+    showModal('📝 Devis ' + currentFacture.numero, content, 'max-w-4xl');
+}
+
+// Fonctions spécifiques aux devis
+function showProductPickerDevis() {
+    document.getElementById('devis-product-picker').classList.remove('hidden');
+    filterProductsDevis('');
+}
+
+function filterProductsDevis(query) {
+    const list = document.getElementById('devis-product-list');
+    const q = query.toLowerCase();
+    const filtered = data.produits.filter(p => 
+        p.reference.toLowerCase().includes(q) || 
+        p.description.toLowerCase().includes(q)
+    ).slice(0, 20);
+    
+    list.innerHTML = filtered.map(p => `
+        <div onclick="addProductToDevis('${p.reference}')" class="flex justify-between items-center p-2 hover:bg-amber-50 rounded cursor-pointer">
+            <div><span class="font-medium text-amber-600">${p.reference}</span> - ${p.description}</div>
+            <span class="text-stone-600">${formatMoney(p.prixHT)}</span>
+        </div>
+    `).join('') || '<div class="text-stone-400 text-center py-2">Aucun produit trouvé</div>';
+}
+
+function addProductToDevis(reference) {
+    const p = data.produits.find(x => x.reference === reference);
+    if (p) {
+        const existing = currentFacture.lignes.find(l => l.reference === reference);
+        if (existing) {
+            existing.quantite++;
+        } else {
+            currentFacture.lignes.push({
+                reference: p.reference,
+                description: p.description,
+                prixHT: p.prixHT,
+                quantite: 1
+            });
+        }
+        renderDevisModal();
+    }
+}
+
+function updateLigneQteDevis(index, value) {
+    currentFacture.lignes[index].quantite = parseInt(value) || 1;
+    renderDevisModal();
+}
+
+function removeLigneDevis(index) {
+    currentFacture.lignes.splice(index, 1);
+    renderDevisModal();
+}
+
+function filterClientsDevis(query) {
+    const suggestions = document.getElementById('devis-client-suggestions');
+    if (!query || query.length < 1) {
+        suggestions.classList.add('hidden');
+        return;
+    }
+    
+    const q = query.toLowerCase();
+    const filtered = data.clients.filter(c => 
+        c.nom.toLowerCase().includes(q) || 
+        c.numero.toLowerCase().includes(q)
+    ).slice(0, 8);
+    
+    if (filtered.length > 0) {
+        suggestions.innerHTML = filtered.map(c => `
+            <div onclick="selectClientDevis('${c.numero}')" 
+                 class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-stone-100 last:border-0">
+                <span class="font-medium text-blue-600">${c.numero}</span> - ${c.nom}
+            </div>
+        `).join('');
+        suggestions.classList.remove('hidden');
+    } else {
+        suggestions.classList.add('hidden');
+    }
+}
+
+function showClientSuggestionsDevis() {
+    const input = document.getElementById('devis-client-search');
+    if (input && input.value.length >= 1) {
+        filterClientsDevis(input.value);
+    }
+}
+
+function selectClientDevis(numero) {
+    currentFacture.clientId = numero;
+    const suggestions = document.getElementById('devis-client-suggestions');
+    if (suggestions) suggestions.classList.add('hidden');
+    const search = document.getElementById('devis-client-search');
+    if (search) search.value = '';
+    renderDevisModal();
 }
 
 function saveDevis() {
