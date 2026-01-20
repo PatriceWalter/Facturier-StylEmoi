@@ -1924,6 +1924,9 @@ function openDevisModal() {
 function renderDevisModal() {
     renderFactureModal();
     document.querySelector('#modal-content h2').textContent = 'Devis ' + currentFacture.numero;
+    // Cacher la case paiement comptoir (pas de sens pour un devis)
+    const comptoir = document.getElementById('facture-comptoir');
+    if (comptoir) comptoir.closest('label').style.display = 'none';
     const saveBtn = Array.from(document.querySelectorAll('#modal-content button')).find(b => b.textContent.includes('Enregistrer'));
     if (saveBtn) saveBtn.onclick = saveDevis;
 }
