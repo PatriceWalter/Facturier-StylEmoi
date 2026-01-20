@@ -1801,8 +1801,8 @@ function printFactureWithCGV(numero) {
             <style>
                 body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
                 @page { size: A4; margin: 15mm; }
-                .page { page-break-after: always; min-height: 257mm; }
-                .page:last-child { page-break-after: auto; }
+                .facture-page { }
+                .cgv-page { page-break-before: always; }
                 table { width: 100%; border-collapse: collapse; margin: 15px 0; }
                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                 th { background: #f5f5f5; }
@@ -1818,8 +1818,8 @@ function printFactureWithCGV(numero) {
             </style>
         </head>
         <body>
-            <!-- Page 1: Facture -->
-            <div class="page">
+            <!-- Recto: Facture -->
+            <div class="facture-page">
                 <div class="header">
                     <div>
                         ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2 style="margin:0">${data.entreprise.nom}</h2>`}
@@ -1858,8 +1858,8 @@ function printFactureWithCGV(numero) {
                 <p style="margin-top:15px">Mode de règlement: ${f.modeReglement}</p>
                 <p style="font-size:10px;color:#999;margin-top:30px">Voir conditions générales de vente au verso</p>
             </div>
-            <!-- Page 2: CGV -->
-            <div class="page">
+            <!-- Verso: CGV -->
+            <div class="cgv-page">
                 <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
                 <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
             </div>
@@ -1994,7 +1994,8 @@ function printDevisWithCGV(numero) {
             <style>
                 body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
                 @page { size: A4; margin: 15mm; }
-                .page { page-break-after: always; min-height: 257mm; }
+                .devis-page { }
+                .cgv-page { page-break-before: always; }
                 table { width: 100%; border-collapse: collapse; margin: 15px 0; }
                 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
                 th { background: #f5f5f5; }
@@ -2005,7 +2006,8 @@ function printDevisWithCGV(numero) {
             </style>
         </head>
         <body>
-            <div class="page">
+            <!-- Recto: Devis -->
+            <div class="devis-page">
                 <div style="display:flex;justify-content:space-between;margin-bottom:30px">
                     <div>
                         ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2>${data.entreprise.nom}</h2>`}
@@ -2014,7 +2016,7 @@ function printDevisWithCGV(numero) {
                     <div style="text-align:right">
                         <h1>DEVIS</h1>
                         <p style="font-size:16px;font-weight:bold">${d.numero}</p>
-                        <p>Date: ${formatDate(d.date)}</p>
+                        <p>Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
                     </div>
                 </div>
                 <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
@@ -2028,7 +2030,8 @@ function printDevisWithCGV(numero) {
                 ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666">TVA non applicable, article 293B du CGI</p>' : ''}
                 <p style="font-size:10px;color:#999;margin-top:30px">Devis valable 30 jours. Voir CGV au verso.</p>
             </div>
-            <div class="page">
+            <!-- Verso: CGV -->
+            <div class="cgv-page">
                 <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
                 <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
             </div>
