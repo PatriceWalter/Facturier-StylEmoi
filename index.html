@@ -158,34 +158,35 @@ const defaultData = {
     version: '3.2.0',
     adminPassword: 'admin123',
     logo: null, // Base64 du logo
-    cgv: `CONDITIONS GÉNÉRALES DE VENTE
+    cgv: `Conditions générales de vente
 
-1. OBJET
-Les présentes conditions générales de vente s'appliquent à toutes les ventes conclues par Styl'Emoi.
+Entre l'auto-entrepreneur Eric Ohlmann Styl'Emoi - Située au 6g Rue De La Mésange, immatriculée au RCS de Strasbourg sous le numéro SIRET 93315077300010.
 
-2. PRIX
-Les prix sont indiqués en euros. TVA non applicable, article 293B du CGI.
+PREAMBULE - Le Vendeur est éditeur de Produits et Services de Customisation d'objets et de textiles à destination de consommateurs.
 
-3. PAIEMENT
-Le paiement est exigible à la commande ou selon les modalités convenues.
+Article 1 : Objet - Les présentes CGV déterminent les droits et obligations des parties dans le cadre de la vente en ligne de Produits ou Services proposés par le Vendeur.
 
-4. LIVRAISON
-Les délais de livraison sont donnés à titre indicatif.
+Article 2 : Dispositions générales - Les présentes CGV régissent les ventes de Produits ou de Services et sont partie intégrante du Contrat entre l'Acheteur et le Vendeur. Elles sont pleinement opposables à l'Acheteur qui les a acceptés avant de passer commande. Le Vendeur se réserve la possibilité de modifier les présentes à tout moment. Les CGV applicables sont celles en vigueur à la date du paiement de la commande. Le Client déclare avoir pris connaissance de l'ensemble des présentes CGV et les accepter sans restriction ni réserve.
 
-5. RÉCLAMATIONS
-Toute réclamation doit être formulée dans un délai de 7 jours suivant la livraison.
+Article 3 : Prix - Les prix des produits sont indiqués en Euro TTC. Le montant total dû par l'Acheteur est indiqué sur la page de confirmation de la commande. Le prix de vente est celui en vigueur au jour de la commande, hors frais de port facturés en supplément. Le Vendeur se réserve la possibilité de modifier ses prix à tout moment, tout en garantissant l'application du prix indiqué au moment de la commande.
 
-6. DROIT DE RÉTRACTATION
-Conformément à la loi, le client dispose d'un délai de 14 jours pour exercer son droit de rétractation. Les produits personnalisés ne peuvent faire l'objet d'un retour.
+Article 4 : Produits et services - Les caractéristiques essentielles des biens, des services et leurs prix respectifs sont mis à disposition de l'acheteur. Conformément à l'article L112-1 du Code la consommation, le consommateur est informé des prix et conditions particulières avant toute conclusion du contrat.
 
-7. GARANTIE
-Nos produits bénéficient de la garantie légale de conformité.
+Article 5 : Commandes - Pour toutes commandes un acompte de 50% sera demandé afin de valider celle-ci. Sans paiement de cet acompte la production ne pourra pas s'effectuer. Un délai allant jusqu'à 21 jours pourra être indiqué en fonction de la complexité de la commande.
 
-8. DONNÉES PERSONNELLES
-Les données collectées sont utilisées uniquement pour le traitement des commandes.
+Article 6 : Modalités de livraison - Les produits sont livrés à l'adresse indiquée lors de la commande et dans les délais indiqués, ou récupérés directement par le client. Ces délais ne prennent pas en compte le délai de préparation. Styl'Emoi ne pourra être tenu responsable des retards de livraisons dus au transporteur.
 
-9. LITIGES
-En cas de litige, une solution amiable sera recherchée. À défaut, les tribunaux de Strasbourg seront compétents.`,
+Article 7 : Paiement - Le paiement est exigible immédiatement à la livraison. Le paiement sécurisé en ligne par PayPal ou lien de paiement est réalisé par notre prestataire. L'engagement de payer donné par carte est irrévocable. En cas d'erreur ou d'impossibilité de débiter la carte, la Vente est immédiatement résolue et la commande annulée.
+
+Article 8 : Délai de rétractation - Conformément à l'article L221-5 du Code de la consommation, l'Acheteur dispose d'un délai de 14 jours pour se rétracter, sauf objets personnalisés sur mesure (objets ou textiles avec photos ou inscriptions personnelles ne pouvant être revendus). Contact : 67stylemoi@gmail.com. Les frais de retour restent à la charge du Client.
+
+Article 9 : Garanties - Conformément à la loi, le Vendeur assume les garanties de conformité et relatives aux vices cachés. Le Vendeur rembourse ou échange les produits défectueux ou ne correspondant pas à la commande. Contact : 67stylemoi@gmail.com
+
+Article 10 : Réclamations et médiation - Réclamations par mail : 67stylemoi@gmail.com. Médiation : MED CONSO DEV - https://www.medconsodev.eu ou par courrier : MED CONSO DEV, Centre d'Affaires Stéphanois, 3 rue J.Constant Milleret, 42000 Saint-Etienne.
+
+Article 11 : Force majeure - L'exécution des obligations du vendeur est suspendue en cas de force majeure. Le vendeur avisera le client de la survenance d'un tel évènement dès que possible.
+
+Article 12 : Protection des données personnelles - Conformément au Règlement 2016/679 du 27 avril 2016 (RGPD), le Vendeur met en place un traitement de données personnelles ayant pour finalité la vente et la livraison de produits et services.`,
     entreprise: {
         nom: "Styl'Emoi",
         complement: 'Entrepreneur individuel',
@@ -1594,15 +1595,48 @@ function renderFactureModal() {
                 </div>
             </div>
             <div class="flex justify-end">
-                <div class="w-72 space-y-2 bg-stone-50 rounded-xl p-4">
+                <div class="w-80 space-y-2 bg-stone-50 rounded-xl p-4">
                     <div class="flex justify-between text-sm"><span>Total HT</span><span class="font-medium">${formatMoney(totalHT)}</span></div>
                     <div class="flex justify-between text-sm items-center">
                         <span>Remise (%)</span>
                         <input type="number" min="0" max="100" value="${f.remise}" onchange="currentFacture.remise = parseFloat(this.value) || 0; renderFactureModal()" class="w-16 text-right border border-stone-300 rounded px-2 py-1">
                     </div>
                     ${f.remise > 0 ? `<div class="flex justify-between text-sm text-red-600"><span>Après remise</span><span>${formatMoney(totalHTRemise)}</span></div>` : ''}
-                    <div class="flex justify-between text-lg font-bold border-t border-stone-300 pt-2">
-                        <span>Total TTC</span><span class="${isDevis ? 'text-blue-600' : 'text-amber-600'}">${formatMoney(totalTTC)}</span>
+                    
+                    <!-- Case à cocher montant manuel -->
+                    <div class="border-t border-stone-300 pt-2 mt-2">
+                        <label class="flex items-center gap-2 cursor-pointer mb-2 ${f.totalManuelValide ? 'opacity-50' : ''}">
+                            <input type="checkbox" id="montant-manuel-check" 
+                                ${f.montantManuel ? 'checked' : ''} 
+                                ${f.totalManuelValide ? 'disabled' : ''}
+                                onchange="toggleMontantManuel(this.checked)" 
+                                class="w-4 h-4 rounded text-amber-500">
+                            <span class="text-sm ${f.totalManuelValide ? 'text-stone-400' : 'text-stone-600'}">Saisir montant TTC manuellement</span>
+                        </label>
+                        
+                        ${f.montantManuel && !f.totalManuelValide ? `
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="number" step="0.01" min="0" id="montant-manuel-input" 
+                                value="${f.totalManuelSaisi || ''}" 
+                                placeholder="Montant TTC"
+                                class="flex-1 text-right border border-amber-300 rounded px-2 py-1 bg-amber-50"
+                                onchange="setMontantManuel(this.value)">
+                            <span class="text-sm text-stone-500">€</span>
+                            <button onclick="validerMontantManuel()" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">✓ OK</button>
+                        </div>
+                        ` : ''}
+                        
+                        ${f.totalManuelValide ? `
+                        <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded px-2 py-1 mb-2">
+                            <span class="text-sm text-green-700">Montant fixé :</span>
+                            <span class="font-bold text-green-700">${formatMoney(f.totalManuelSaisi)}</span>
+                            <button onclick="reinitMontantManuel()" class="text-red-500 hover:text-red-700 text-xs ml-2" title="Réinitialiser">✕</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>Total TTC</span><span class="${isDevis ? 'text-blue-600' : 'text-amber-600'}">${formatMoney(f.totalManuelValide ? f.totalManuelSaisi : totalTTC)}</span>
                     </div>
                 </div>
             </div>
@@ -1705,7 +1739,12 @@ function saveFacture() {
     const f = currentFacture;
     const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
     const totalHTRemise = totalHT * (1 - f.remise / 100);
-    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    let totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    
+    // Utiliser le montant manuel si validé
+    if (f.totalManuelValide && f.totalManuelSaisi) {
+        totalTTC = f.totalManuelSaisi;
+    }
     
     f.totalHT = totalHT;
     f.totalHTRemise = totalHTRemise;
@@ -1723,6 +1762,39 @@ function saveFacture() {
     saveData();
     closeModal();
     renderPage();
+}
+
+// Fonctions de gestion du montant manuel
+function toggleMontantManuel(checked) {
+    currentFacture.montantManuel = checked;
+    if (!checked) {
+        currentFacture.totalManuelSaisi = null;
+        currentFacture.totalManuelValide = false;
+    }
+    renderFactureModal();
+}
+
+function setMontantManuel(value) {
+    currentFacture.totalManuelSaisi = parseFloat(value) || 0;
+}
+
+function validerMontantManuel() {
+    const input = document.getElementById('montant-manuel-input');
+    if (input && input.value) {
+        currentFacture.totalManuelSaisi = parseFloat(input.value) || 0;
+        currentFacture.totalManuelValide = true;
+        currentFacture.montantManuel = false; // Décoche la case
+        renderFactureModal();
+    } else {
+        alert('Veuillez saisir un montant');
+    }
+}
+
+function reinitMontantManuel() {
+    currentFacture.totalManuelSaisi = null;
+    currentFacture.totalManuelValide = false;
+    currentFacture.montantManuel = false;
+    renderFactureModal();
 }
 
 function deleteFacture(numero) {
@@ -1825,22 +1897,29 @@ function printFactureWithCGV(numero) {
         <head>
             <title>Facture ${f.numero}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
-                @page { size: A4; margin: 15mm; }
-                .facture-page { }
-                .cgv-page { page-break-before: always; }
-                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                * { box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 11px; }
+                @page { size: A4; margin: 10mm; }
+                @media print {
+                    .facture-page { page-break-after: always; height: 277mm; }
+                    .cgv-page { page-break-before: avoid; page-break-inside: avoid; }
+                }
+                .facture-page { padding: 10mm; }
+                .cgv-page { padding: 8mm; }
+                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 10px; }
                 th { background: #f5f5f5; }
                 .text-right { text-align: right; }
                 .text-center { text-align: center; }
-                .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                .totals { width: 250px; margin-left: auto; }
-                .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
-                .total-line { border-top: 2px solid #333; font-weight: bold; font-size: 14px; }
-                h1 { color: #f59e0b; margin: 0; }
-                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; page-break-after: avoid; }
-                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; text-align: justify; }
+                .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                .totals { width: 220px; margin-left: auto; }
+                .totals div { display: flex; justify-content: space-between; padding: 4px 0; font-size: 11px; }
+                .total-line { border-top: 2px solid #333; font-weight: bold; font-size: 13px; }
+                h1 { color: #f59e0b; margin: 0; font-size: 24px; }
+                h2 { margin: 0; font-size: 16px; }
+                .cgv-wrapper { display: block; }
+                .cgv-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
+                .cgv-content { font-size: 7.5px; line-height: 1.35; column-count: 2; column-gap: 15px; text-align: justify; orphans: 3; widows: 3; }
             </style>
         </head>
         <body>
@@ -1848,17 +1927,17 @@ function printFactureWithCGV(numero) {
             <div class="facture-page">
                 <div class="header">
                     <div>
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><h2 style="margin:0">${data.entreprise.nom}</h2>` : `<h2 style="margin:0">${data.entreprise.nom}</h2>`}
-                        <p>${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
-                        <p style="margin-top:10px">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px"><h2>${data.entreprise.nom}</h2>` : `<h2>${data.entreprise.nom}</h2>`}
+                        <p style="font-size:10px;margin:5px 0">${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                        <p style="font-size:9px;margin:5px 0">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
                     </div>
                     <div style="text-align:right">
                         <h1>FACTURE</h1>
-                        <p style="font-size:16px;font-weight:bold">${f.numero}</p>
-                        <p style="margin-top:15px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
+                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${f.numero}</p>
+                        <p style="font-size:10px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
                     </div>
                 </div>
-                <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
                     <strong>DESTINATAIRE</strong><br>
                     ${f.paiementComptoir ? `
                         <span style="color:#d97706;font-weight:bold">🛒 Paiement comptoir</span><br>
@@ -1880,14 +1959,16 @@ function printFactureWithCGV(numero) {
                     ${f.remise > 0 ? `<div style="color:red"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
                     <div class="total-line"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
                 </div>
-                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:20px">TVA non applicable, article 293B du CGI</p>' : ''}
-                <p style="margin-top:15px">Mode de règlement: ${f.modeReglement}</p>
-                <p style="font-size:10px;color:#999;margin-top:30px">Voir conditions générales de vente au verso</p>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:15px;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="margin-top:10px;font-size:10px">Mode de règlement: ${f.modeReglement}</p>
+                <p style="font-size:9px;color:#999;margin-top:20px">Voir conditions générales de vente au verso</p>
             </div>
             <!-- Verso: CGV -->
             <div class="cgv-page">
-                <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div class="cgv-content">${data.cgv.trim().replace(/\n/g, '<br>')}</div>
+                <div class="cgv-wrapper">
+                    <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
+                    <div class="cgv-content">${data.cgv.trim().replace(/\n\n/g, '<br><br>').replace(/\n/g, ' ')}</div>
+                </div>
             </div>
         </body>
         </html>
@@ -2159,7 +2240,12 @@ function saveDevis() {
     const d = currentFacture;
     const totalHT = d.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
     const totalHTRemise = totalHT * (1 - d.remise / 100);
-    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    let totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    
+    // Utiliser le montant manuel si validé
+    if (d.totalManuelValide && d.totalManuelSaisi) {
+        totalTTC = d.totalManuelSaisi;
+    }
     
     d.totalHT = totalHT;
     d.totalHTRemise = totalHTRemise;
@@ -2220,48 +2306,57 @@ function printDevisWithCGV(numero) {
         <head>
             <title>Devis ${d.numero}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20mm; font-size: 12px; }
-                @page { size: A4; margin: 15mm; }
-                .devis-page { }
-                .cgv-page { page-break-before: always; }
-                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                * { box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 11px; }
+                @page { size: A4; margin: 10mm; }
+                @media print {
+                    .devis-page { page-break-after: always; height: 277mm; }
+                    .cgv-page { page-break-before: avoid; page-break-inside: avoid; }
+                }
+                .devis-page { padding: 10mm; }
+                .cgv-page { padding: 8mm; }
+                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 10px; }
                 th { background: #f5f5f5; }
                 .text-right { text-align: right; }
-                h1 { color: #3b82f6; margin: 0; }
-                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; page-break-after: avoid; }
-                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; text-align: justify; }
+                h1 { color: #3b82f6; margin: 0; font-size: 24px; }
+                h2 { margin: 0; font-size: 16px; }
+                .cgv-wrapper { display: block; }
+                .cgv-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 5px; }
+                .cgv-content { font-size: 7.5px; line-height: 1.35; column-count: 2; column-gap: 15px; text-align: justify; orphans: 3; widows: 3; }
             </style>
         </head>
         <body>
             <!-- Recto: Devis -->
             <div class="devis-page">
-                <div style="display:flex;justify-content:space-between;margin-bottom:30px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:20px">
                     <div>
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><h2 style="margin:0">${data.entreprise.nom}</h2>` : `<h2>${data.entreprise.nom}</h2>`}
-                        <p>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px"><h2>${data.entreprise.nom}</h2>` : `<h2>${data.entreprise.nom}</h2>`}
+                        <p style="font-size:10px;margin:5px 0">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
                     </div>
                     <div style="text-align:right">
                         <h1>DEVIS</h1>
-                        <p style="font-size:16px;font-weight:bold">${d.numero}</p>
-                        <p>Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
+                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${d.numero}</p>
+                        <p style="font-size:10px">Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
                     </div>
                 </div>
-                <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
                     <strong>DESTINATAIRE</strong><br>${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}
                 </div>
                 <table>
                     <thead><tr><th>Réf.</th><th>Description</th><th class="text-right">Prix HT</th><th style="text-align:center">Qté</th><th class="text-right">Total</th></tr></thead>
                     <tbody>${d.lignes.map(l => `<tr><td>${l.reference}</td><td>${l.description}</td><td class="text-right">${formatMoney(l.prixHT)}</td><td style="text-align:center">${l.quantite}</td><td class="text-right">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}</tbody>
                 </table>
-                <div style="width:250px;margin-left:auto"><div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #333;font-weight:bold;font-size:14px"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div>
-                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666">TVA non applicable, article 293B du CGI</p>' : ''}
-                <p style="font-size:10px;color:#999;margin-top:30px">Devis valable 30 jours. Voir CGV au verso.</p>
+                <div style="width:220px;margin-left:auto"><div style="display:flex;justify-content:space-between;padding:8px 0;border-top:2px solid #333;font-weight:bold;font-size:13px"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="font-size:9px;color:#999;margin-top:20px">Devis valable 30 jours. Voir CGV au verso.</p>
             </div>
             <!-- Verso: CGV -->
             <div class="cgv-page">
-                <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div class="cgv-content">${data.cgv.trim().replace(/\n/g, '<br>')}</div>
+                <div class="cgv-wrapper">
+                    <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
+                    <div class="cgv-content">${data.cgv.trim().replace(/\n\n/g, '<br><br>').replace(/\n/g, ' ')}</div>
+                </div>
             </div>
         </body>
         </html>
