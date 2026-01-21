@@ -1718,7 +1718,7 @@ function viewFacture(numero) {
             <div class="print-page">
                 <div class="flex justify-between mb-8">
                     <div>
-                        ${data.logo ? `<img src="${data.logo}" alt="Logo" class="max-h-16 mb-2">` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
+                        ${data.logo ? `<img src="${data.logo}" alt="Logo" class="max-h-16 mb-2"><h2 class="text-xl font-bold">${data.entreprise.nom}</h2>` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
                         <p class="text-sm text-stone-600">${data.entreprise.complement}</p>
                         <p class="text-sm text-stone-600">${data.entreprise.adresse}</p>
                         <p class="text-sm text-stone-600">${data.entreprise.codePostal} ${data.entreprise.ville}</p>
@@ -1823,7 +1823,7 @@ function printFactureWithCGV(numero) {
             <div class="facture-page">
                 <div class="header">
                     <div>
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2 style="margin:0">${data.entreprise.nom}</h2>`}
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><h2 style="margin:0">${data.entreprise.nom}</h2>` : `<h2 style="margin:0">${data.entreprise.nom}</h2>`}
                         <p>${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
                         <p style="margin-top:10px">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
                     </div>
@@ -1956,7 +1956,7 @@ function viewDevis(numero) {
         <div class="space-y-6">
             <div class="flex justify-between">
                 <div>
-                    ${data.logo ? `<img src="${data.logo}" class="max-h-16 mb-2">` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
+                    ${data.logo ? `<img src="${data.logo}" class="max-h-16 mb-2"><h2 class="text-xl font-bold">${data.entreprise.nom}</h2>` : `<h2 class="text-xl font-bold">${data.entreprise.nom}</h2>`}
                     <p class="text-sm text-stone-600">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}</p>
                 </div>
                 <div class="text-right">
@@ -2012,7 +2012,7 @@ function printDevisWithCGV(numero) {
             <div class="devis-page">
                 <div style="display:flex;justify-content:space-between;margin-bottom:30px">
                     <div>
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px">` : `<h2>${data.entreprise.nom}</h2>`}
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><h2 style="margin:0">${data.entreprise.nom}</h2>` : `<h2>${data.entreprise.nom}</h2>`}
                         <p>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
                     </div>
                     <div style="text-align:right">
@@ -2141,7 +2141,7 @@ function openEmailModal(defaultEmail, sujet, corps, type) {
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
-                <button onclick="envoyerEmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Ouvrir dans ma messagerie</button>
+                <button onclick="envoyerEmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Ouvrir Gmail</button>
             </div>
         </div>
     `;
@@ -2158,8 +2158,9 @@ function envoyerEmail() {
         return;
     }
     
-    const mailtoLink = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
-    window.location.href = mailtoLink;
+    // Ouvrir Gmail directement
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+    window.open(gmailUrl, '_blank');
     
     closeModal();
 }
