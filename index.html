@@ -1782,6 +1782,7 @@ function viewFacture(numero) {
             </div>
         </div>
         <div class="flex justify-end gap-3 mt-6 no-print">
+            <button onclick="sendFactureByEmail('${f.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Envoyer par email</button>
             <button onclick="printFactureWithCGV('${f.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer (recto-verso)</button>
         </div>
     `;
@@ -1975,6 +1976,7 @@ function viewDevis(numero) {
             <div class="flex justify-end"><div class="w-64"><div class="flex justify-between py-2 border-t-2 font-bold"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div></div>
         </div>
         <div class="flex justify-end gap-3 mt-6">
+            <button onclick="sendDevisByEmail('${d.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Envoyer par email</button>
             <button onclick="printDevisWithCGV('${d.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer</button>
         </div>
     `;
@@ -2040,6 +2042,126 @@ function printDevisWithCGV(numero) {
     `);
     printWindow.document.close();
     printWindow.print();
+}
+
+// ============================================
+// ENVOI PAR EMAIL
+// ============================================
+function sendFactureByEmail(numero) {
+    const f = data.factures.find(x => x.numero === numero);
+    const client = f.paiementComptoir ? null : getClient(f.clientId);
+    
+    const sujet = `Facture ${f.numero} - ${data.entreprise.nom}`;
+    const lignesDetail = f.lignes.map(l => `- ${l.description} (x${l.quantite}) : ${formatMoney(l.prixHT * l.quantite)} HT`).join('\n');
+    
+    const corps = `Bonjour${client ? ' ' + client.nom : ''},
+
+Veuillez trouver ci-dessous le récapitulatif de votre facture :
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FACTURE N° ${f.numero}
+Date : ${formatDate(f.date)}
+Échéance : ${formatDate(f.dateEcheance)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${lignesDetail}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total HT : ${formatMoney(f.totalHT)}${f.remise > 0 ? '\nRemise (' + f.remise + '%) : -' + formatMoney(f.totalHT * f.remise / 100) : ''}
+TOTAL TTC : ${formatMoney(f.totalTTC)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Mode de règlement : ${f.modeReglement}
+
+Coordonnées bancaires :
+IBAN : ${data.entreprise.iban}
+BIC : ${data.entreprise.bic}
+
+Cordialement,
+${data.entreprise.nom}
+${data.entreprise.telephone}`;
+
+    openEmailModal(client?.email || '', sujet, corps, 'facture');
+}
+
+function sendDevisByEmail(numero) {
+    const d = data.devis.find(x => x.numero === numero);
+    const client = getClient(d.clientId);
+    
+    const sujet = `Devis ${d.numero} - ${data.entreprise.nom}`;
+    const lignesDetail = d.lignes.map(l => `- ${l.description} (x${l.quantite}) : ${formatMoney(l.prixHT * l.quantite)} HT`).join('\n');
+    
+    const corps = `Bonjour${client ? ' ' + client.nom : ''},
+
+Suite à votre demande, veuillez trouver ci-dessous notre proposition :
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEVIS N° ${d.numero}
+Date : ${formatDate(d.date)}
+Validité : ${formatDate(d.dateEcheance)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${lignesDetail}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total HT : ${formatMoney(d.totalHT || d.totalTTC / 1.2)}${d.remise > 0 ? '\nRemise (' + d.remise + '%) : -' + formatMoney((d.totalHT || d.totalTTC / 1.2) * d.remise / 100) : ''}
+TOTAL TTC : ${formatMoney(d.totalTTC)}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ce devis est valable 30 jours.
+
+N'hésitez pas à me contacter pour toute question.
+
+Cordialement,
+${data.entreprise.nom}
+${data.entreprise.telephone}`;
+
+    openEmailModal(client?.email || '', sujet, corps, 'devis');
+}
+
+function openEmailModal(defaultEmail, sujet, corps, type) {
+    const content = `
+        <div class="space-y-4">
+            <p class="text-stone-600">Envoyer ce ${type} par email :</p>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">Adresse email du destinataire</label>
+                <input type="email" id="email-destinataire" value="${defaultEmail}" 
+                       class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                       placeholder="exemple@email.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">Sujet</label>
+                <input type="text" id="email-sujet" value="${sujet}" 
+                       class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">Message</label>
+                <textarea id="email-corps" rows="12" 
+                          class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-mono">${corps}</textarea>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
+                <button onclick="envoyerEmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Ouvrir dans ma messagerie</button>
+            </div>
+        </div>
+    `;
+    showModal('📧 Envoyer par email', content, 'max-w-2xl');
+}
+
+function envoyerEmail() {
+    const email = document.getElementById('email-destinataire').value;
+    const sujet = document.getElementById('email-sujet').value;
+    const corps = document.getElementById('email-corps').value;
+    
+    if (!email) {
+        alert('Veuillez saisir une adresse email');
+        return;
+    }
+    
+    const mailtoLink = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+    window.location.href = mailtoLink;
+    
+    closeModal();
 }
 
 function convertDevisToFacture(numero) {
