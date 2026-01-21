@@ -246,6 +246,10 @@ En cas de litige, une solution amiable sera recherchée. À défaut, les tribuna
         { numero: 'C00021', type: 'Particulier', nom: 'weiss maria', adresse: '', codePostal: '', ville: 'sessenheim', telephone: '', portable: '', email: '' },
         { numero: 'C00022', type: 'Particulier', nom: 'CANARELLI CELINE', adresse: '', codePostal: '44320', ville: 'CHAUMES EN RETZ', telephone: '', portable: '', email: '' },
         { numero: 'C00023', type: 'Particulier', nom: 'Klein Fabienne', adresse: '', codePostal: '67110', ville: 'Reichshoffen', telephone: '', portable: '', email: '' },
+        { numero: 'C00024', type: 'Particulier', nom: 'Schneider Dylan', adresse: '', codePostal: '67360', ville: 'Preuschdorf', telephone: '', portable: '', email: '' },
+        { numero: 'C00025', type: 'Particulier', nom: 'Pauli Anita', adresse: '7 rue Charles Munch', codePostal: '67580', ville: 'Mertzwiller', telephone: '', portable: '', email: '' },
+        { numero: 'C00026', type: 'Particulier', nom: 'Marché de Noël Novembre', adresse: '', codePostal: '', ville: '', telephone: '', portable: '', email: '' },
+        { numero: 'C00027', type: 'Particulier', nom: 'Marché de Noël Décembre', adresse: '', codePostal: '', ville: '', telephone: '', portable: '', email: '' },
     ],
     produits: [
         // TASSES - T001 à T018
@@ -391,6 +395,13 @@ En cas de litige, une solution amiable sera recherchée. À défaut, les tribuna
         // SERVIETTES - SE001 à SE002
         { reference: 'SE001', description: 'Serviette de bain 50x100', prixHT: 6.40, tauxTVA: 0, coutAchat: 6.40, marge: 0, categorie: 'serviettes' },
         { reference: 'SE002', description: 'Serviette de bain 70x141', prixHT: 11.95, tauxTVA: 0, coutAchat: 11.95, marge: 0, categorie: 'serviettes' },
+        // DIVERS - DIV001 à DIV003
+        { reference: 'DIV001', description: 'Boîte avec lumière étoile', prixHT: 25.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
+        { reference: 'DIV002', description: 'Marché de Noël Novembre', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
+        { reference: 'DIV003', description: 'Marché de Noël Décembre', prixHT: 0, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
+        { reference: 'DIV004', description: 'Boîte sans lumière étoile', prixHT: 22.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
+        { reference: 'DIV005', description: 'Boule de Noël', prixHT: 2.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
+        { reference: 'DIV006', description: 'Boule de Noël en bois', prixHT: 4.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers' },
     ],
     factures: [
         { numero: 'F00001', clientId: 'C00002', date: '2024-10-23', dateEcheance: '2024-11-22', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
@@ -420,6 +431,9 @@ En cas de litige, une solution amiable sera recherchée. À défaut, les tribuna
         { numero: 'F00025', clientId: 'C00022', date: '2026-01-20', dateEcheance: '2026-01-20', modeReglement: 'virement', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA009', description: 'Panneau en verre 127 x 178', prixHT: 15.0, quantite: 16, tauxTVA: 0 }], totalHT: 240.0, totalTTC: 240.0 },
         { numero: 'F00026', clientId: 'C00023', date: '2025-09-23', dateEcheance: '2025-10-23', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'PA002', description: 'Panneau acrylique 150 x 200', prixHT: 10.0, quantite: 2, tauxTVA: 0 }], totalHT: 20.0, totalTTC: 20.0 },
         { numero: 'F00027', clientId: 'C00001', date: '2026-01-20', dateEcheance: '2026-01-20', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'G006', description: 'Gourde sport Alu Blanc 500ML', prixHT: 13.0, quantite: 1, tauxTVA: 0 }, { id: 2, reference: 'G011', description: 'Thermos Inox 750ML Blanc+Gobelet', prixHT: 22.0, quantite: 1, tauxTVA: 0 }], totalHT: 35.0, totalTTC: 35.0 },
+        { numero: 'F00028', clientId: 'C00025', date: '2025-11-11', dateEcheance: '2025-12-11', modeReglement: 'virement', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'DIV001', description: 'Boîte avec lumière étoile', prixHT: 25.0, quantite: 1, tauxTVA: 0 }], totalHT: 25.0, totalTTC: 25.0 },
+        { numero: 'F00029', clientId: 'C00026', date: '2025-11-30', dateEcheance: '2025-12-30', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'DIV002', description: 'Marché de Noël Novembre', prixHT: 0, quantite: 1, tauxTVA: 0 }], totalHT: 0, totalTTC: 0 },
+        { numero: 'F00030', clientId: 'C00027', date: '2025-12-24', dateEcheance: '2026-01-24', modeReglement: 'à définir', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'DIV003', description: 'Marché de Noël Décembre', prixHT: 0, quantite: 1, tauxTVA: 0 }], totalHT: 0, totalTTC: 0 },
     ],
     devis: [],
     paiements: [],
@@ -1816,8 +1830,8 @@ function printFactureWithCGV(numero) {
                 .totals div { display: flex; justify-content: space-between; padding: 5px 0; }
                 .total-line { border-top: 2px solid #333; font-weight: bold; font-size: 14px; }
                 h1 { color: #f59e0b; margin: 0; }
-                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center; }
-                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; }
+                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; page-break-after: avoid; }
+                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; text-align: justify; }
             </style>
         </head>
         <body>
@@ -1864,7 +1878,7 @@ function printFactureWithCGV(numero) {
             <!-- Verso: CGV -->
             <div class="cgv-page">
                 <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
+                <div class="cgv-content">${data.cgv.trim().replace(/\n/g, '<br>')}</div>
             </div>
         </body>
         </html>
@@ -2005,8 +2019,8 @@ function printDevisWithCGV(numero) {
                 th { background: #f5f5f5; }
                 .text-right { text-align: right; }
                 h1 { color: #3b82f6; margin: 0; }
-                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center; }
-                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; }
+                .cgv-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; text-align: center; page-break-after: avoid; }
+                .cgv-content { font-size: 9px; line-height: 1.4; column-count: 2; column-gap: 20px; text-align: justify; }
             </style>
         </head>
         <body>
@@ -2037,7 +2051,7 @@ function printDevisWithCGV(numero) {
             <!-- Verso: CGV -->
             <div class="cgv-page">
                 <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div class="cgv-content">${data.cgv.replace(/\n/g, '<br>')}</div>
+                <div class="cgv-content">${data.cgv.trim().replace(/\n/g, '<br>')}</div>
             </div>
         </body>
         </html>
