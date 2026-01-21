@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facturier Styl'Emoi</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1782,7 +1783,7 @@ function viewFacture(numero) {
             </div>
         </div>
         <div class="flex justify-end gap-3 mt-6 no-print">
-            <button onclick="sendFactureByEmail('${f.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Envoyer par email</button>
+            <button onclick="sendFactureByEmail('${f.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 PDF + Gmail</button>
             <button onclick="printFactureWithCGV('${f.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer (recto-verso)</button>
         </div>
     `;
@@ -1976,7 +1977,7 @@ function viewDevis(numero) {
             <div class="flex justify-end"><div class="w-64"><div class="flex justify-between py-2 border-t-2 font-bold"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div></div></div>
         </div>
         <div class="flex justify-end gap-3 mt-6">
-            <button onclick="sendDevisByEmail('${d.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Envoyer par email</button>
+            <button onclick="sendDevisByEmail('${d.numero}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 PDF + Gmail</button>
             <button onclick="printDevisWithCGV('${d.numero}')" class="btn-primary text-white px-4 py-2.5 rounded-xl font-medium">🖨️ Imprimer</button>
         </div>
     `;
@@ -2045,124 +2046,202 @@ function printDevisWithCGV(numero) {
 }
 
 // ============================================
-// ENVOI PAR EMAIL
+// ENVOI PAR EMAIL AVEC PDF
 // ============================================
 function sendFactureByEmail(numero) {
     const f = data.factures.find(x => x.numero === numero);
     const client = f.paiementComptoir ? null : getClient(f.clientId);
     
-    const sujet = `Facture ${f.numero} - ${data.entreprise.nom}`;
-    const lignesDetail = f.lignes.map(l => `- ${l.description} (x${l.quantite}) : ${formatMoney(l.prixHT * l.quantite)} HT`).join('\n');
-    
-    const corps = `Bonjour${client ? ' ' + client.nom : ''},
+    // Générer et télécharger le PDF
+    generateFacturePDF(f, client, () => {
+        // Ouvrir Gmail avec message pro
+        const email = client?.email || '';
+        const sujet = `Facture ${f.numero} - ${data.entreprise.nom}`;
+        const corps = `Bonjour,
 
-Veuillez trouver ci-dessous le récapitulatif de votre facture :
+Veuillez trouver en pièce jointe votre facture N° ${f.numero}.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-FACTURE N° ${f.numero}
-Date : ${formatDate(f.date)}
+Montant : ${formatMoney(f.totalTTC)} TTC
 Échéance : ${formatDate(f.dateEcheance)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${lignesDetail}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total HT : ${formatMoney(f.totalHT)}${f.remise > 0 ? '\nRemise (' + f.remise + '%) : -' + formatMoney(f.totalHT * f.remise / 100) : ''}
-TOTAL TTC : ${formatMoney(f.totalTTC)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Mode de règlement : ${f.modeReglement}
-
-Coordonnées bancaires :
+Règlement par ${f.modeReglement} :
 IBAN : ${data.entreprise.iban}
 BIC : ${data.entreprise.bic}
 
-Cordialement,
+Restant à votre disposition,
+
 ${data.entreprise.nom}
 ${data.entreprise.telephone}`;
 
-    openEmailModal(client?.email || '', sujet, corps, 'facture');
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+        window.open(gmailUrl, '_blank');
+    });
 }
 
 function sendDevisByEmail(numero) {
     const d = data.devis.find(x => x.numero === numero);
     const client = getClient(d.clientId);
     
-    const sujet = `Devis ${d.numero} - ${data.entreprise.nom}`;
-    const lignesDetail = d.lignes.map(l => `- ${l.description} (x${l.quantite}) : ${formatMoney(l.prixHT * l.quantite)} HT`).join('\n');
-    
-    const corps = `Bonjour${client ? ' ' + client.nom : ''},
+    // Générer et télécharger le PDF
+    generateDevisPDF(d, client, () => {
+        // Ouvrir Gmail avec message pro
+        const email = client?.email || '';
+        const sujet = `Devis ${d.numero} - ${data.entreprise.nom}`;
+        const corps = `Bonjour,
 
-Suite à votre demande, veuillez trouver ci-dessous notre proposition :
+Suite à votre demande, veuillez trouver en pièce jointe notre devis N° ${d.numero}.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DEVIS N° ${d.numero}
-Date : ${formatDate(d.date)}
-Validité : ${formatDate(d.dateEcheance)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-${lignesDetail}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total HT : ${formatMoney(d.totalHT || d.totalTTC / 1.2)}${d.remise > 0 ? '\nRemise (' + d.remise + '%) : -' + formatMoney((d.totalHT || d.totalTTC / 1.2) * d.remise / 100) : ''}
-TOTAL TTC : ${formatMoney(d.totalTTC)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Ce devis est valable 30 jours.
+Montant : ${formatMoney(d.totalTTC)} TTC
+Validité : 30 jours
 
 N'hésitez pas à me contacter pour toute question.
 
 Cordialement,
+
 ${data.entreprise.nom}
 ${data.entreprise.telephone}`;
 
-    openEmailModal(client?.email || '', sujet, corps, 'devis');
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+        window.open(gmailUrl, '_blank');
+    });
 }
 
-function openEmailModal(defaultEmail, sujet, corps, type) {
-    const content = `
-        <div class="space-y-4">
-            <p class="text-stone-600">Envoyer ce ${type} par email :</p>
-            <div>
-                <label class="block text-sm font-medium text-stone-700 mb-1">Adresse email du destinataire</label>
-                <input type="email" id="email-destinataire" value="${defaultEmail}" 
-                       class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                       placeholder="exemple@email.com">
+function generateFacturePDF(f, client, callback) {
+    const element = document.createElement('div');
+    element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div>
+                    ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><br>` : ''}
+                    <strong style="font-size:16px">${data.entreprise.nom}</strong><br>
+                    ${data.entreprise.complement ? data.entreprise.complement + '<br>' : ''}
+                    ${data.entreprise.adresse}<br>
+                    ${data.entreprise.codePostal} ${data.entreprise.ville}<br>
+                    Tél: ${data.entreprise.telephone}<br><br>
+                    Siret: ${data.entreprise.siret}<br>
+                    IBAN: ${data.entreprise.iban}<br>
+                    BIC: ${data.entreprise.bic}
+                </div>
+                <div style="text-align:right">
+                    <h1 style="color:#f59e0b;margin:0;font-size:24px">FACTURE</h1>
+                    <p style="font-size:16px;font-weight:bold">${f.numero}</p>
+                    <p style="margin-top:15px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-stone-700 mb-1">Sujet</label>
-                <input type="text" id="email-sujet" value="${sujet}" 
-                       class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+            <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                <strong>DESTINATAIRE</strong><br>
+                ${f.paiementComptoir ? 'Paiement comptoir' : `${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`}
             </div>
-            <div>
-                <label class="block text-sm font-medium text-stone-700 mb-1">Message</label>
-                <textarea id="email-corps" rows="12" 
-                          class="w-full px-4 py-2.5 border border-stone-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-mono">${corps}</textarea>
+            <table style="width:100%;border-collapse:collapse;margin:15px 0">
+                <thead>
+                    <tr style="background:#f5f5f5">
+                        <th style="border:1px solid #ddd;padding:8px;text-align:left">Réf.</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:left">Description</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:right">Prix HT</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:center">Qté</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:right">Total HT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${f.lignes.map(l => `
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:8px">${l.reference}</td>
+                            <td style="border:1px solid #ddd;padding:8px">${l.description}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:right">${formatMoney(l.prixHT)}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:center">${l.quantite}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:right">${formatMoney(l.prixHT * l.quantite)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div style="width:250px;margin-left:auto">
+                <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Total HT</span><span>${formatMoney(f.totalHT)}</span></div>
+                ${f.remise > 0 ? `<div style="display:flex;justify-content:space-between;padding:5px 0;color:red"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #333;font-weight:bold;font-size:14px"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
             </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeModal()" class="px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl font-medium">Annuler</button>
-                <button onclick="envoyerEmail()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium">📧 Ouvrir Gmail</button>
-            </div>
+            ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:20px">TVA non applicable, article 293B du CGI</p>' : ''}
+            <p style="margin-top:15px">Mode de règlement: ${f.modeReglement}</p>
         </div>
     `;
-    showModal('📧 Envoyer par email', content, 'max-w-2xl');
+    
+    document.body.appendChild(element);
+    
+    html2pdf().set({
+        margin: 10,
+        filename: `Facture_${f.numero}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(element).save().then(() => {
+        document.body.removeChild(element);
+        setTimeout(callback, 500);
+    });
 }
 
-function envoyerEmail() {
-    const email = document.getElementById('email-destinataire').value;
-    const sujet = document.getElementById('email-sujet').value;
-    const corps = document.getElementById('email-corps').value;
+function generateDevisPDF(d, client, callback) {
+    const element = document.createElement('div');
+    element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+                <div>
+                    ${data.logo ? `<img src="${data.logo}" style="max-height:60px;margin-bottom:10px"><br>` : ''}
+                    <strong style="font-size:16px">${data.entreprise.nom}</strong><br>
+                    ${data.entreprise.adresse}<br>
+                    ${data.entreprise.codePostal} ${data.entreprise.ville}<br>
+                    Tél: ${data.entreprise.telephone}
+                </div>
+                <div style="text-align:right">
+                    <h1 style="color:#3b82f6;margin:0;font-size:24px">DEVIS</h1>
+                    <p style="font-size:16px;font-weight:bold">${d.numero}</p>
+                    <p style="margin-top:15px">Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
+                </div>
+            </div>
+            <div style="background:#f5f5f5;padding:15px;margin-bottom:20px">
+                <strong>DESTINATAIRE</strong><br>
+                ${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin:15px 0">
+                <thead>
+                    <tr style="background:#f5f5f5">
+                        <th style="border:1px solid #ddd;padding:8px;text-align:left">Réf.</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:left">Description</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:right">Prix HT</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:center">Qté</th>
+                        <th style="border:1px solid #ddd;padding:8px;text-align:right">Total HT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${d.lignes.map(l => `
+                        <tr>
+                            <td style="border:1px solid #ddd;padding:8px">${l.reference}</td>
+                            <td style="border:1px solid #ddd;padding:8px">${l.description}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:right">${formatMoney(l.prixHT)}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:center">${l.quantite}</td>
+                            <td style="border:1px solid #ddd;padding:8px;text-align:right">${formatMoney(l.prixHT * l.quantite)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div style="width:250px;margin-left:auto">
+                <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid #333;font-weight:bold;font-size:14px"><span>Total TTC</span><span>${formatMoney(d.totalTTC)}</span></div>
+            </div>
+            ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:20px">TVA non applicable, article 293B du CGI</p>' : ''}
+            <p style="font-size:10px;color:#999;margin-top:30px">Devis valable 30 jours.</p>
+        </div>
+    `;
     
-    if (!email) {
-        alert('Veuillez saisir une adresse email');
-        return;
-    }
+    document.body.appendChild(element);
     
-    // Ouvrir Gmail directement
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
-    window.open(gmailUrl, '_blank');
-    
-    closeModal();
+    html2pdf().set({
+        margin: 10,
+        filename: `Devis_${d.numero}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(element).save().then(() => {
+        document.body.removeChild(element);
+        setTimeout(callback, 500);
+    });
 }
 
 function convertDevisToFacture(numero) {
