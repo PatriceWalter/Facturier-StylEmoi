@@ -564,6 +564,8 @@ function applyDataMigrations() {
     if (!data.version) data.version = '3.2.0';
     if (!data.adminPassword) data.adminPassword = 'admin123';
     if (!data.categories) data.categories = defaultData.categories;
+    // Migration des achats
+    if (!data.achats || data.achats.length === 0) data.achats = defaultData.achats;
     // Migration des produits sans catégorie
     if (data.produits) {
         data.produits.forEach(p => {
@@ -1992,10 +1994,10 @@ function printFactureWithCGV(numero) {
                 h1 { color: #f59e0b; margin: 0; font-size: 24px; }
                 h2 { margin: 0; font-size: 16px; }
                 .cgv-wrapper { display: block; }
-                .cgv-title { font-size: 11px; font-weight: bold; margin-bottom: 6px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 4px; }
-                .cgv-content { font-size: 6.5px; line-height: 1.3; column-count: 2; column-gap: 12px; text-align: justify; orphans: 3; widows: 3; }
-                .cgv-content .article { margin-bottom: 6px; break-inside: avoid; }
-                .cgv-content .article-title { font-weight: bold; font-size: 7px; margin-bottom: 2px; color: #333; text-transform: uppercase; }
+                .cgv-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 4px; }
+                .cgv-content { font-size: 7.5px; line-height: 1.35; text-align: justify; }
+                .cgv-content .article { margin-bottom: 8px; }
+                .cgv-content .article-title { font-weight: bold; font-size: 8px; margin-bottom: 3px; color: #333; }
             </style>
         </head>
         <body>
@@ -2400,10 +2402,10 @@ function printDevisWithCGV(numero) {
                 h1 { color: #3b82f6; margin: 0; font-size: 24px; }
                 h2 { margin: 0; font-size: 16px; }
                 .cgv-wrapper { display: block; }
-                .cgv-title { font-size: 11px; font-weight: bold; margin-bottom: 6px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 4px; }
-                .cgv-content { font-size: 6.5px; line-height: 1.3; column-count: 2; column-gap: 12px; text-align: justify; orphans: 3; widows: 3; }
-                .cgv-content .article { margin-bottom: 6px; break-inside: avoid; }
-                .cgv-content .article-title { font-weight: bold; font-size: 7px; margin-bottom: 2px; color: #333; text-transform: uppercase; }
+                .cgv-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 4px; }
+                .cgv-content { font-size: 7.5px; line-height: 1.35; text-align: justify; }
+                .cgv-content .article { margin-bottom: 8px; }
+                .cgv-content .article-title { font-weight: bold; font-size: 8px; margin-bottom: 3px; color: #333; }
             </style>
         </head>
         <body>
