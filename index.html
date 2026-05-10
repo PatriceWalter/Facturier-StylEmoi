@@ -2482,17 +2482,14 @@ function printDevisWithCGV(numero) {
 }
 
 // ============================================
-// ENVOI PAR EMAIL AVEC PDF (CORRECTION RECTO-VERSO)
-// ============================================
-// ============================================
-// ENVOI PAR EMAIL AVEC PDF (TÉLÉCHARGEMENT DIRECT)
+// ENVOI PAR EMAIL AVEC PDF (CORRECTION FINALE)
 // ============================================
 
 function sendFactureByEmail(numero) {
     const f = data.factures.find(x => x.numero === numero);
     const client = f.paiementComptoir ? null : getClient(f.clientId);
     
-    // Génère le PDF de façon invisible, le télécharge, puis ouvre Gmail
+    // Génère le PDF, le télécharge, puis ouvre Gmail
     generateFacturePDF(f, client, () => {
         const email = client?.email || '';
         const sujet = `Facture ${f.numero} - ${data.entreprise.nom}`;
@@ -2547,211 +2544,210 @@ function generateFacturePDF(f, client, callback) {
     const clientName = f.paiementComptoir ? 'Client de passage' : (client?.nom || '-');
     const clientAddress = f.paiementComptoir ? 'Vente au comptoir' : `${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`;
     
-    // On crée un élément virtuel (non attaché à la page pour ne rien casser)
-    const element = document.createElement('div');
-    element.style.width = '800px'; 
-    element.style.fontFamily = 'Arial, sans-serif';
-    element.style.color = '#333';
-    element.style.fontSize = '12px';
-    element.style.background = 'white';
-
-    element.innerHTML = `
-        <div>
-            <table style="width: 100%; margin-bottom: 30px; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 50%; vertical-align: top;">
-                        ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-                        <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
-                            ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
-                        </p>
-                    </td>
-                    <td style="width: 50%; vertical-align: top; text-align: right;">
-                        <h1 style="font-size: 28px; color: #ea580c; margin: 0;">FACTURE</h1>
-                        <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${f.numero}</strong></p>
-                        <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(f.date)}</p>
-                        <p style="font-size: 11px; margin: 2px 0;">Échéance : ${formatDate(f.dateEcheance)}</p>
-                    </td>
-                </tr>
-            </table>
-
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; margin-bottom: 30px; width: 50%; margin-left: 50%; box-sizing: border-box;">
-                <p style="font-size: 10px; color: #888; margin: 0 0 5px 0;">DESTINATAIRE</p>
-                <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
-                <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
-            </div>
-
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <thead>
-                    <tr style="background: #eee;">
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Réf.</th>
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Description</th>
-                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc;">Qté</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ccc;">Total HT</th>
+    // On passe directement le code HTML au moteur PDF sous forme de texte (String)
+    // Cela empêche totalement le bug de la zone de capture 0x0
+    const pdfHtml = `
+        <div style="font-family: Arial, sans-serif; color: #222; font-size: 12px; background: #fff;">
+            
+            <div>
+                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: top;">
+                            ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
+                            <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
+                            <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
+                                ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
+                            </p>
+                        </td>
+                        <td style="width: 50%; vertical-align: top; text-align: right;">
+                            <h1 style="font-size: 28px; color: #ea580c; margin: 0;">FACTURE</h1>
+                            <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${f.numero}</strong></p>
+                            <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(f.date)}</p>
+                            <p style="font-size: 11px; margin: 2px 0;">Échéance : ${formatDate(f.dateEcheance)}</p>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    ${f.lignes.map(l => `
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ccc;">${l.reference}</td>
-                            <td style="padding: 10px; border: 1px solid #ccc;">${l.description}</td>
-                            <td style="padding: 10px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
-                            <td style="padding: 10px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
-                            <td style="padding: 10px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
+                </table>
+
+                <div style="background: #f9f9f9; padding: 15px; margin-bottom: 30px; margin-left: 50%; width: 50%; box-sizing: border-box;">
+                    <p style="font-size: 10px; color: #888; margin: 0 0 5px 0;">DESTINATAIRE</p>
+                    <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
+                    <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Réf.</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Description</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid #ccc;">Qté</th>
+                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
+                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Total HT</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 60%; vertical-align: top;">
-                        <p style="font-size: 11px; color: #555;"><strong>Règlement :</strong> ${f.modeReglement}</p>
-                        ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic;">TVA non applicable, art. 293B du CGI</p>' : ''}
-                    </td>
-                    <td style="width: 40%;">
-                        <table style="width: 100%; border-collapse: collapse;">
+                    </thead>
+                    <tbody>
+                        ${f.lignes.map(l => `
                             <tr>
-                                <td style="padding: 5px; text-align: right;">Total HT</td>
-                                <td style="padding: 5px; text-align: right; width: 80px;">${formatMoney(f.totalHT)}</td>
+                                <td style="padding: 8px; border: 1px solid #ccc;">${l.reference}</td>
+                                <td style="padding: 8px; border: 1px solid #ccc;">${l.description}</td>
+                                <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
+                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
+                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
                             </tr>
-                            ${f.remise > 0 ? `
-                            <tr>
-                                <td style="padding: 5px; text-align: right; color: red;">Remise (${f.remise}%)</td>
-                                <td style="padding: 5px; text-align: right; color: red;">-${formatMoney(f.totalHT * f.remise / 100)}</td>
-                            </tr>
-                            ` : ''}
-                            <tr style="background: #f9f9f9;">
-                                <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
-                                <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #ea580c;">${formatMoney(f.totalTTC)}</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </div>
+                        `).join('')}
+                    </tbody>
+                </table>
 
-        <div class="html2pdf__page-break"></div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 60%; vertical-align: top;">
+                            <p style="font-size: 11px; color: #555;"><strong>Règlement :</strong> ${f.modeReglement}</p>
+                            ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic;">TVA non applicable, art. 293B du CGI</p>' : ''}
+                        </td>
+                        <td style="width: 40%;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 4px; text-align: right;">Total HT</td>
+                                    <td style="padding: 4px; text-align: right; width: 80px;">${formatMoney(f.totalHT)}</td>
+                                </tr>
+                                ${f.remise > 0 ? `
+                                <tr>
+                                    <td style="padding: 4px; text-align: right; color: red;">Remise (${f.remise}%)</td>
+                                    <td style="padding: 4px; text-align: right; color: red;">-${formatMoney(f.totalHT * f.remise / 100)}</td>
+                                </tr>
+                                ` : ''}
+                                <tr style="background: #f9f9f9;">
+                                    <td style="padding: 8px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
+                                    <td style="padding: 8px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #ea580c;">${formatMoney(f.totalTTC)}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-        <div>
-            <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-                CONDITIONS GÉNÉRALES DE VENTE
+            <div class="html2pdf__page-break"></div>
+
+            <div style="padding-top: 20px;">
+                <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
+                    CONDITIONS GÉNÉRALES DE VENTE
+                </div>
+                <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
+                    ${formatCGVForPDF(data.cgv)}
+                </div>
             </div>
-            <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
-                ${formatCGVForPDF(data.cgv)}
-            </div>
+
         </div>
     `;
 
+    // Configuration pure du PDF
     const opt = {
-        margin: 15, // 15mm de marge réelle calculée par le générateur PDF
-        filename: 'Facture_' + f.numero + '.pdf',
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin:       10, // Applique une marge propre de 10mm sur tout le PDF
+        filename:     'Facture_' + f.numero + '.pdf',
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', before: '.html2pdf__page-break' }
     };
 
-    html2pdf().set(opt).from(element).save().then(() => {
+    // Génération depuis la String (le code texte) et non depuis la page
+    html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
         if (callback) callback();
-    });
+    }).catch(err => alert("Erreur lors de la création du PDF : " + err));
 }
 
 function generateDevisPDF(d, client, callback) {
     const clientName = client?.nom || '-';
     const clientAddress = `${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`;
     
-    const element = document.createElement('div');
-    element.style.width = '800px';
-    element.style.fontFamily = 'Arial, sans-serif';
-    element.style.color = '#333';
-    element.style.fontSize = '12px';
-    element.style.background = 'white';
-
-    element.innerHTML = `
-        <div>
-            <table style="width: 100%; margin-bottom: 30px; border-collapse: collapse;">
-                <tr>
-                    <td style="width: 50%; vertical-align: top;">
-                        ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-                        <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
-                            ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
-                        </p>
-                    </td>
-                    <td style="width: 50%; vertical-align: top; text-align: right;">
-                        <h1 style="font-size: 28px; color: #2563eb; margin: 0;">DEVIS</h1>
-                        <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${d.numero}</strong></p>
-                        <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(d.date)}</p>
-                        <p style="font-size: 11px; margin: 2px 0;">Validité : ${formatDate(d.dateEcheance)}</p>
-                    </td>
-                </tr>
-            </table>
-
-            <div style="background: #f0f7ff; padding: 15px; border-radius: 4px; margin-bottom: 30px; width: 50%; margin-left: 50%; box-sizing: border-box;">
-                <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0;">PROPOSITION POUR</p>
-                <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
-                <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
-            </div>
-
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                <thead>
-                    <tr style="background: #eee;">
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Réf.</th>
-                        <th style="padding: 10px; text-align: left; border: 1px solid #ccc;">Description</th>
-                        <th style="padding: 10px; text-align: center; border: 1px solid #ccc;">Qté</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
-                        <th style="padding: 10px; text-align: right; border: 1px solid #ccc;">Total HT</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${d.lignes.map(l => `
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ccc;">${l.reference}</td>
-                            <td style="padding: 10px; border: 1px solid #ccc;">${l.description}</td>
-                            <td style="padding: 10px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
-                            <td style="padding: 10px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
-                            <td style="padding: 10px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-
-            <div style="display: flex; justify-content: flex-end;">
-                <table style="width: 40%; border-collapse: collapse;">
-                    <tr style="background: #f9f9f9;">
-                        <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
-                        <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #2563eb;">${formatMoney(d.totalTTC)}</td>
+    const pdfHtml = `
+        <div style="font-family: Arial, sans-serif; color: #222; font-size: 12px; background: #fff;">
+            
+            <div>
+                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; vertical-align: top;">
+                            ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
+                            <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
+                            <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
+                                ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
+                            </p>
+                        </td>
+                        <td style="width: 50%; vertical-align: top; text-align: right;">
+                            <h1 style="font-size: 28px; color: #2563eb; margin: 0;">DEVIS</h1>
+                            <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${d.numero}</strong></p>
+                            <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(d.date)}</p>
+                            <p style="font-size: 11px; margin: 2px 0;">Validité : ${formatDate(d.dateEcheance)}</p>
+                        </td>
                     </tr>
                 </table>
-            </div>
-            ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic; margin-top: 20px;">TVA non applicable, art. 293B du CGI</p>' : ''}
-        </div>
 
-        <div class="html2pdf__page-break"></div>
+                <div style="background: #f0f7ff; padding: 15px; margin-bottom: 30px; margin-left: 50%; width: 50%; box-sizing: border-box;">
+                    <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0;">PROPOSITION POUR</p>
+                    <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
+                    <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
+                </div>
 
-        <div>
-            <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-                CONDITIONS GÉNÉRALES DE VENTE
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Réf.</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Description</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid #ccc;">Qté</th>
+                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
+                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Total HT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${d.lignes.map(l => `
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #ccc;">${l.reference}</td>
+                                <td style="padding: 8px; border: 1px solid #ccc;">${l.description}</td>
+                                <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
+                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
+                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <table style="width: 40%; border-collapse: collapse;">
+                        <tr style="background: #f9f9f9;">
+                            <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
+                            <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #2563eb;">${formatMoney(d.totalTTC)}</td>
+                        </tr>
+                    </table>
+                </div>
+                ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic; margin-top: 20px;">TVA non applicable, art. 293B du CGI</p>' : ''}
             </div>
-            <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
-                ${formatCGVForPDF(data.cgv)}
+
+            <div class="html2pdf__page-break"></div>
+
+            <div style="padding-top: 20px;">
+                <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
+                    CONDITIONS GÉNÉRALES DE VENTE
+                </div>
+                <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
+                    ${formatCGVForPDF(data.cgv)}
+                </div>
             </div>
+
         </div>
     `;
 
     const opt = {
-        margin: 15, // 15mm de marge globale
-        filename: 'Devis_' + d.numero + '.pdf',
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin:       10, 
+        filename:     'Devis_' + d.numero + '.pdf',
+        image:        { type: 'jpeg', quality: 1 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', before: '.html2pdf__page-break' }
     };
 
-    html2pdf().set(opt).from(element).save().then(() => {
+    html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
         if (callback) callback();
-    });
-}// ============================================
+    }).catch(err => alert("Erreur lors de la création du PDF : " + err));
+}}// ============================================
 // PAIEMENTS
 // ============================================
 function renderPaiements() {
