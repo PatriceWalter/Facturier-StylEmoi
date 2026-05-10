@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
@@ -31,6 +32,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-stone-100 to-amber-50 min-h-screen">
+    <!-- Page de Connexion -->
     <div id="login-page" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
             <div class="text-center mb-8">
@@ -52,23 +54,28 @@
     </div>
 
     <div id="app" class="hidden flex min-h-screen">
+        <!-- Sidebar FIXE -->
         <aside class="w-64 bg-gradient-to-b from-stone-900 to-stone-800 text-white flex flex-col h-screen sticky top-0 no-print">
             <div class="p-6 border-b border-stone-700">
                 <div id="sidebar-logo" class="logo-container cursor-pointer" onclick="navigateTo('settings')" title="Cliquez pour changer le logo">
-                    </div>
+                    <!-- Logo ou texte par défaut -->
+                </div>
                 <p class="text-stone-400 text-sm mt-1" id="version-display">v3.0.0</p>
             </div>
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="nav-menu"></nav>
             <div class="p-4 border-t border-stone-700 text-stone-400 text-xs">© 2024 Styl'Emoi</div>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 p-8 overflow-auto" id="main-content"></main>
     </div>
 
+    <!-- Modal Container -->
     <div id="modal-container" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div id="modal-content" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"></div>
     </div>
 
+    <!-- Zone d'impression cachée -->
     <div id="print-area" class="hidden print:block"></div>
 
 <script>
@@ -409,7 +416,7 @@ Article 12 : Protection des données personnelles - Conformément au Règlement 
         { reference: 'DIV005', description: 'Boule de Noël', prixHT: 2.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers', stock: 0 },
         { reference: 'DIV006', description: 'Boule de Noël en bois', prixHT: 4.00, tauxTVA: 0, coutAchat: 0, marge: 0, categorie: 'divers', stock: 0 },
     ],
-factures: [
+    factures: [
         { numero: 'F00001', clientId: 'C00002', date: '2024-10-23', dateEcheance: '2024-11-22', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 1, tauxTVA: 0 }], totalHT: 15.0, totalTTC: 15.0 },
         { numero: 'F00002', clientId: 'C00002', date: '2024-10-27', dateEcheance: '2024-11-26', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T002', description: 'Tasse émail 450 ml personnalisée', prixHT: 15.0, quantite: 2, tauxTVA: 0 }], totalHT: 30.01, totalTTC: 30.01 },
         { numero: 'F00003', clientId: 'C00003', date: '2024-11-15', dateEcheance: '2024-12-15', modeReglement: 'espèces', remise: 0, acompte: 0, lignes: [{ id: 1, reference: 'T015', description: 'Tasse paillette rose bleu', prixHT: 15.0, quantite: 9, tauxTVA: 0 }], totalHT: 135.04, totalTTC: 135.04 },
@@ -1129,6 +1136,7 @@ function deleteClient(numero) {
         renderPage();
     }
 }
+
 // ============================================
 // PRODUITS
 // ============================================
@@ -1173,6 +1181,7 @@ function renderProduits() {
                 </div>
             </div>
 
+            <!-- Filtres par catégorie -->
             <div class="flex flex-wrap gap-2">
                 <button onclick="selectedCategorie = null; renderPage()" 
                     class="px-4 py-2 rounded-xl font-medium transition-all ${!selectedCategorie ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}">
@@ -1189,6 +1198,7 @@ function renderProduits() {
                 }).join('')}
             </div>
 
+            <!-- Barre de recherche -->
             <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400">🔍</span>
                 <input type="text" placeholder="Rechercher un produit..." value="${produitSearch}" 
@@ -1196,6 +1206,7 @@ function renderProduits() {
                     class="w-full pl-12 pr-4 py-3 border border-stone-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:outline-none">
             </div>
 
+            <!-- Affichage par catégorie ou liste simple -->
             ${selectedCategorie ? renderProduitsTable(filtered) : renderProduitsParCategorie(produitsParCategorie)}
         </div>
     `;
@@ -1383,6 +1394,7 @@ function renderCategorieModal() {
                 💡 Les catégories permettent d'organiser vos produits. Chaque produit appartient à une catégorie.
             </div>
             
+            <!-- Liste des catégories -->
             <div class="space-y-2">
                 ${data.categories.map((cat, index) => {
                     const count = data.produits.filter(p => p.categorie === cat.id).length;
@@ -1404,6 +1416,7 @@ function renderCategorieModal() {
                 }).join('')}
             </div>
             
+            <!-- Formulaire nouvelle catégorie -->
             <div class="border-t border-stone-200 pt-4 mt-4">
                 <h4 class="font-medium text-stone-700 mb-3">➕ Ajouter une catégorie</h4>
                 <div class="grid grid-cols-3 gap-3">
@@ -1596,6 +1609,7 @@ function renderFactureModal() {
                 </div>
                 <div class="space-y-3">
                     ${!isDevis ? `
+                    <!-- Case Paiement Comptoir (seulement pour factures) -->
                     <label class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
                         <input type="checkbox" id="facture-comptoir" ${f.paiementComptoir ? 'checked' : ''} onchange="currentFacture.paiementComptoir = this.checked; if(this.checked) currentFacture.clientId = ''; renderFactureModal()" class="w-5 h-5 rounded text-amber-500">
                         <div>
@@ -1684,6 +1698,7 @@ function renderFactureModal() {
                     </div>
                     ${f.remise > 0 ? `<div class="flex justify-between text-sm text-red-600"><span>Après remise</span><span>${formatMoney(totalHTRemise)}</span></div>` : ''}
                     
+                    <!-- Case à cocher montant manuel -->
                     <div class="border-t border-stone-300 pt-2 mt-2">
                         <label class="flex items-center gap-2 cursor-pointer mb-2 ${f.totalManuelValide ? 'opacity-50' : ''}">
                             <input type="checkbox" id="montant-manuel-check" 
@@ -1894,6 +1909,7 @@ function viewFacture(numero) {
     
     const content = `
         <div id="print-facture">
+            <!-- Page 1 : Facture -->
             <div class="print-page">
                 <div class="flex justify-between mb-8">
                     <div>
@@ -2007,6 +2023,7 @@ function printFactureWithCGV(numero) {
             </style>
         </head>
         <body>
+            <!-- Recto: Facture -->
             <div class="facture-page">
                 <div class="header">
                     <div>
@@ -2046,6 +2063,7 @@ function printFactureWithCGV(numero) {
                 <p style="margin-top:10px;font-size:10px">Mode de règlement: ${f.modeReglement}</p>
                 <p style="font-size:9px;color:#999;margin-top:20px">Voir conditions générales de vente au verso</p>
             </div>
+            <!-- Verso: CGV -->
             <div class="cgv-page">
                 <div class="cgv-wrapper">
                     <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
@@ -2058,6 +2076,7 @@ function printFactureWithCGV(numero) {
     printWindow.document.close();
     printWindow.print();
 }
+
 // ============================================
 // GESTION DU STOCK
 // ============================================
@@ -2077,6 +2096,7 @@ function renderStock() {
                 </div>
             </div>
             
+            <!-- Statistiques -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-4 shadow border-l-4 border-blue-500">
                     <p class="text-stone-500 text-sm">Produits en stock</p>
@@ -2096,6 +2116,7 @@ function renderStock() {
                 </div>
             </div>
             
+            <!-- Filtres -->
             <div class="bg-white rounded-xl p-4 shadow flex flex-wrap gap-4 items-center">
                 <input type="text" id="stock-search" placeholder="🔍 Rechercher un produit..." 
                     class="flex-1 min-w-[200px] px-4 py-2 border rounded-lg" onkeyup="filterStock()">
@@ -2111,6 +2132,7 @@ function renderStock() {
                 </select>
             </div>
             
+            <!-- Tableau de stock -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-stone-200">
                 <table class="w-full" id="stock-table">
                     <thead class="bg-gradient-to-r from-stone-100 to-stone-50">
@@ -2257,7 +2279,7 @@ function decrementerStock(lignes) {
 }
 
 // ============================================
-// DEVIS
+// DEVIS (similaire aux factures)
 // ============================================
 function renderDevis() {
     return `
@@ -2375,42 +2397,6 @@ function viewDevis(numero) {
     showModal('Devis ' + d.numero, content, 'max-w-3xl');
 }
 
-function convertDevisToFacture(numero) {
-    const devis = data.devis.find(d => d.numero === numero);
-    if (!devis) return;
-    
-    if (confirm(`Voulez-vous convertir le devis ${numero} en facture ?`)) {
-        // Créer une nouvelle facture basée sur le devis
-        const nouvelleFacture = JSON.parse(JSON.stringify(devis));
-        nouvelleFacture.numero = generateNumber('F', data.factures);
-        nouvelleFacture.date = new Date().toISOString().split('T')[0];
-        
-        // Calculer l'échéance par défaut (30 jours)
-        const dateEcheance = new Date();
-        dateEcheance.setDate(dateEcheance.getDate() + 30);
-        nouvelleFacture.dateEcheance = dateEcheance.toISOString().split('T')[0];
-        
-        // Initialiser les champs spécifiques à la facture
-        nouvelleFacture.paiementComptoir = false;
-        
-        // Décrémenter le stock car les produits sont vendus
-        decrementerStock(nouvelleFacture.lignes);
-        
-        data.factures.push(nouvelleFacture);
-        saveData();
-        alert(`Devis converti avec succès en facture ${nouvelleFacture.numero}`);
-        navigateTo('factures');
-    }
-}
-
-function deleteDevis(numero) {
-    if (confirm('Supprimer ce devis ?')) {
-        data.devis = data.devis.filter(d => d.numero !== numero);
-        saveData();
-        renderPage();
-    }
-}
-
 function printDevisWithCGV(numero) {
     const d = data.devis.find(x => x.numero === numero);
     const client = getClient(d.clientId);
@@ -2445,6 +2431,7 @@ function printDevisWithCGV(numero) {
             </style>
         </head>
         <body>
+            <!-- Recto: Devis -->
             <div class="devis-page">
                 <div style="display:flex;justify-content:space-between;margin-bottom:20px">
                     <div>
@@ -2468,6 +2455,7 @@ function printDevisWithCGV(numero) {
                 ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
                 <p style="font-size:9px;color:#999;margin-top:20px">Devis valable 30 jours. Voir CGV au verso.</p>
             </div>
+            <!-- Verso: CGV -->
             <div class="cgv-page">
                 <div class="cgv-wrapper">
                     <div class="cgv-title">CONDITIONS GÉNÉRALES DE VENTE</div>
@@ -2482,15 +2470,15 @@ function printDevisWithCGV(numero) {
 }
 
 // ============================================
-// ENVOI PAR EMAIL AVEC PDF (CORRECTION FINALE)
+// ENVOI PAR EMAIL AVEC PDF
 // ============================================
-
 function sendFactureByEmail(numero) {
     const f = data.factures.find(x => x.numero === numero);
     const client = f.paiementComptoir ? null : getClient(f.clientId);
     
-    // Génère le PDF, le télécharge, puis ouvre Gmail
+    // Générer et télécharger le PDF
     generateFacturePDF(f, client, () => {
+        // Ouvrir Gmail avec message pro
         const email = client?.email || '';
         const sujet = `Facture ${f.numero} - ${data.entreprise.nom}`;
         const corps = `Bonjour,
@@ -2518,7 +2506,9 @@ function sendDevisByEmail(numero) {
     const d = data.devis.find(x => x.numero === numero);
     const client = getClient(d.clientId);
     
+    // Générer et télécharger le PDF
     generateDevisPDF(d, client, () => {
+        // Ouvrir Gmail avec message pro
         const email = client?.email || '';
         const sujet = `Devis ${d.numero} - ${data.entreprise.nom}`;
         const corps = `Bonjour,
@@ -2541,213 +2531,157 @@ ${data.entreprise.telephone}`;
 }
 
 function generateFacturePDF(f, client, callback) {
-    const clientName = f.paiementComptoir ? 'Client de passage' : (client?.nom || '-');
-    const clientAddress = f.paiementComptoir ? 'Vente au comptoir' : `${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`;
-    
-    // On passe directement le code HTML au moteur PDF sous forme de texte (String)
-    // Cela empêche totalement le bug de la zone de capture 0x0
     const pdfHtml = `
-        <div style="font-family: Arial, sans-serif; color: #222; font-size: 12px; background: #fff;">
-            
-            <div>
-                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 50%; vertical-align: top;">
-                            ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-                            <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
-                            <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
-                                ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
-                            </p>
-                        </td>
-                        <td style="width: 50%; vertical-align: top; text-align: right;">
-                            <h1 style="font-size: 28px; color: #ea580c; margin: 0;">FACTURE</h1>
-                            <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${f.numero}</strong></p>
-                            <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(f.date)}</p>
-                            <p style="font-size: 11px; margin: 2px 0;">Échéance : ${formatDate(f.dateEcheance)}</p>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="background: #f9f9f9; padding: 15px; margin-bottom: 30px; margin-left: 50%; width: 50%; box-sizing: border-box;">
-                    <p style="font-size: 10px; color: #888; margin: 0 0 5px 0;">DESTINATAIRE</p>
-                    <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
-                    <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
+        <div style="width:794px;font-family:Arial,sans-serif;font-size:11px;background:#fff;">
+            <div style="padding:10mm;">
+                <table style="width:100%;border:none;border-collapse:collapse;margin-bottom:20px;"><tr>
+                    <td style="vertical-align:top;border:none;padding:0;width:55%;">
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px;display:block;"><div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>` : `<div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>`}
+                        <p style="font-size:10px;margin:5px 0">${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                        <p style="font-size:9px;margin:5px 0">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
+                    </td>
+                    <td style="vertical-align:top;text-align:right;border:none;padding:0;width:45%;">
+                        <div style="color:#f59e0b;margin:0;font-size:24px;font-weight:bold;">FACTURE</div>
+                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${f.numero}</p>
+                        <p style="font-size:10px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
+                    </td>
+                </tr></table>
+                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
+                    <strong>DESTINATAIRE</strong><br>
+                    ${f.paiementComptoir ? `<span style="color:#d97706;font-weight:bold">Paiement comptoir</span><br><span style="color:#666">Vente directe - Client de passage</span>` : `${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`}
                 </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                    <thead>
-                        <tr style="background: #eee;">
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Réf.</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Description</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid #ccc;">Qté</th>
-                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
-                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Total HT</th>
-                        </tr>
-                    </thead>
+                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
+                    <thead><tr style="background:#f5f5f5;">
+                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Réf.</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Description</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Prix HT</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:center;font-size:10px;">Qté</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Total HT</th>
+                    </tr></thead>
                     <tbody>
-                        ${f.lignes.map(l => `
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ccc;">${l.reference}</td>
-                                <td style="padding: 8px; border: 1px solid #ccc;">${l.description}</td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
-                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
-                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
-                            </tr>
-                        `).join('')}
+                        ${f.lignes.map(l => `<tr><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.reference}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.description}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT)}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:center;">${l.quantite}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}
                     </tbody>
                 </table>
-
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 60%; vertical-align: top;">
-                            <p style="font-size: 11px; color: #555;"><strong>Règlement :</strong> ${f.modeReglement}</p>
-                            ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic;">TVA non applicable, art. 293B du CGI</p>' : ''}
-                        </td>
-                        <td style="width: 40%;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 4px; text-align: right;">Total HT</td>
-                                    <td style="padding: 4px; text-align: right; width: 80px;">${formatMoney(f.totalHT)}</td>
-                                </tr>
-                                ${f.remise > 0 ? `
-                                <tr>
-                                    <td style="padding: 4px; text-align: right; color: red;">Remise (${f.remise}%)</td>
-                                    <td style="padding: 4px; text-align: right; color: red;">-${formatMoney(f.totalHT * f.remise / 100)}</td>
-                                </tr>
-                                ` : ''}
-                                <tr style="background: #f9f9f9;">
-                                    <td style="padding: 8px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
-                                    <td style="padding: 8px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #ea580c;">${formatMoney(f.totalTTC)}</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                <table style="width:220px;margin-left:auto;border:none;border-collapse:collapse;">
+                    <tr style="border:none;"><td style="padding:4px 0;font-size:11px;border:none;">Total HT</td><td style="padding:4px 0;font-size:11px;text-align:right;border:none;">${formatMoney(f.totalHT)}</td></tr>
+                    ${f.remise > 0 ? `<tr style="color:red;border:none;"><td style="padding:4px 0;font-size:11px;border:none;">Remise (${f.remise}%)</td><td style="padding:4px 0;font-size:11px;text-align:right;border:none;">-${formatMoney(f.totalHT * f.remise / 100)}</td></tr>` : ''}
+                    <tr style="border:none;"><td style="padding:4px 0;font-size:13px;font-weight:bold;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">Total TTC</td><td style="padding:4px 0;font-size:13px;font-weight:bold;text-align:right;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">${formatMoney(f.totalTTC)}</td></tr>
                 </table>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:15px;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="margin-top:10px;font-size:10px">Mode de règlement: ${f.modeReglement}</p>
+                <p style="font-size:9px;color:#999;margin-top:20px">Voir conditions générales de vente en page suivante</p>
             </div>
-
-            <div class="html2pdf__page-break"></div>
-
-            <div style="padding-top: 20px;">
-                <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-                    CONDITIONS GÉNÉRALES DE VENTE
-                </div>
-                <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
-                    ${formatCGVForPDF(data.cgv)}
-                </div>
+            <div style="padding:8mm;page-break-before:always;" class="html2pdf__page-break">
+                <div style="font-size:10px;font-weight:bold;margin-bottom:6px;text-align:center;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:3px;">CONDITIONS GÉNÉRALES DE VENTE</div>
+                <div style="font-size:6px;line-height:1.3;text-align:justify;">${formatCGVForPDF(data.cgv)}</div>
             </div>
-
         </div>
     `;
 
-    // Configuration pure du PDF
-    const opt = {
-        margin:       10, // Applique une marge propre de 10mm sur tout le PDF
-        filename:     'Facture_' + f.numero + '.pdf',
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: 'css', before: '.html2pdf__page-break' }
-    };
-
-    // Génération depuis la String (le code texte) et non depuis la page
-    html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
-        if (callback) callback();
-    }).catch(err => alert("Erreur lors de la création du PDF : " + err));
+    html2pdf().set({
+        margin: 0,
+        filename: 'Facture_' + f.numero + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+    }).from(pdfHtml, 'string').toPdf().get('pdf').then(pdf => {
+        while (pdf.internal.getNumberOfPages() > 2) {
+            pdf.deletePage(pdf.internal.getNumberOfPages());
+        }
+        pdf.save('Facture_' + f.numero + '.pdf');
+        if (callback) setTimeout(callback, 500);
+    }).catch(err => {
+        console.error('Erreur PDF facture:', err);
+        alert('Erreur PDF: ' + err.message);
+    });
 }
 
 function generateDevisPDF(d, client, callback) {
-    const clientName = client?.nom || '-';
-    const clientAddress = `${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`;
-    
     const pdfHtml = `
-        <div style="font-family: Arial, sans-serif; color: #222; font-size: 12px; background: #fff;">
-            
-            <div>
-                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 50%; vertical-align: top;">
-                            ${data.logo ? `<img src="${data.logo}" style="max-height: 60px; margin-bottom: 10px;">` : ''}
-                            <h2 style="font-size: 18px; margin: 0;">${data.entreprise.nom}</h2>
-                            <p style="font-size: 11px; color: #555; margin: 5px 0; line-height: 1.4;">
-                                ${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél : ${data.entreprise.telephone}
-                            </p>
-                        </td>
-                        <td style="width: 50%; vertical-align: top; text-align: right;">
-                            <h1 style="font-size: 28px; color: #2563eb; margin: 0;">DEVIS</h1>
-                            <p style="font-size: 14px; margin: 5px 0;"><strong>N° ${d.numero}</strong></p>
-                            <p style="font-size: 11px; margin: 2px 0;">Date : ${formatDate(d.date)}</p>
-                            <p style="font-size: 11px; margin: 2px 0;">Validité : ${formatDate(d.dateEcheance)}</p>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="background: #f0f7ff; padding: 15px; margin-bottom: 30px; margin-left: 50%; width: 50%; box-sizing: border-box;">
-                    <p style="font-size: 10px; color: #64748b; margin: 0 0 5px 0;">PROPOSITION POUR</p>
-                    <p style="font-size: 13px; font-weight: bold; margin: 0 0 3px 0;">${clientName}</p>
-                    <p style="font-size: 11px; margin: 0;">${clientAddress}</p>
+        <div style="width:794px;font-family:Arial,sans-serif;font-size:11px;background:#fff;">
+            <div style="padding:10mm;">
+                <table style="width:100%;border:none;border-collapse:collapse;margin-bottom:20px;"><tr>
+                    <td style="vertical-align:top;border:none;padding:0;width:55%;">
+                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px;display:block;"><div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>` : `<div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>`}
+                        <p style="font-size:10px;margin:5px 0">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
+                    </td>
+                    <td style="vertical-align:top;text-align:right;border:none;padding:0;width:45%;">
+                        <div style="color:#3b82f6;margin:0;font-size:24px;font-weight:bold;">DEVIS</div>
+                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${d.numero}</p>
+                        <p style="font-size:10px">Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
+                    </td>
+                </tr></table>
+                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
+                    <strong>DESTINATAIRE</strong><br>${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}
                 </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-                    <thead>
-                        <tr style="background: #eee;">
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Réf.</th>
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ccc;">Description</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid #ccc;">Qté</th>
-                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Prix HT</th>
-                            <th style="padding: 8px; text-align: right; border: 1px solid #ccc;">Total HT</th>
-                        </tr>
-                    </thead>
+                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
+                    <thead><tr style="background:#f5f5f5;">
+                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Réf.</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Description</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Prix HT</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:center;font-size:10px;">Qté</th>
+                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Total</th>
+                    </tr></thead>
                     <tbody>
-                        ${d.lignes.map(l => `
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ccc;">${l.reference}</td>
-                                <td style="padding: 8px; border: 1px solid #ccc;">${l.description}</td>
-                                <td style="padding: 8px; text-align: center; border: 1px solid #ccc;">${l.quantite}</td>
-                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT)}</td>
-                                <td style="padding: 8px; text-align: right; border: 1px solid #ccc;">${formatMoney(l.prixHT * l.quantite)}</td>
-                            </tr>
-                        `).join('')}
+                        ${d.lignes.map(l => `<tr><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.reference}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.description}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT)}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:center;">${l.quantite}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}
                     </tbody>
                 </table>
-
-                <div style="display: flex; justify-content: flex-end;">
-                    <table style="width: 40%; border-collapse: collapse;">
-                        <tr style="background: #f9f9f9;">
-                            <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333;">TOTAL TTC</td>
-                            <td style="padding: 10px; font-size: 14px; font-weight: bold; text-align: right; border-top: 1px solid #333; color: #2563eb;">${formatMoney(d.totalTTC)}</td>
-                        </tr>
-                    </table>
-                </div>
-                ${data.entreprise.exonereTVA ? '<p style="font-size: 11px; font-style: italic; margin-top: 20px;">TVA non applicable, art. 293B du CGI</p>' : ''}
+                <table style="width:220px;margin-left:auto;border:none;border-collapse:collapse;">
+                    <tr style="border:none;"><td style="padding:8px 0;font-size:13px;font-weight:bold;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">Total TTC</td><td style="padding:8px 0;font-size:13px;font-weight:bold;text-align:right;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">${formatMoney(d.totalTTC)}</td></tr>
+                </table>
+                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
+                <p style="font-size:9px;color:#999;margin-top:20px">Devis valable 30 jours. Voir CGV en page suivante.</p>
             </div>
-
-            <div class="html2pdf__page-break"></div>
-
-            <div style="padding-top: 20px;">
-                <div style="font-size: 12px; font-weight: bold; text-align: center; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px;">
-                    CONDITIONS GÉNÉRALES DE VENTE
-                </div>
-                <div style="font-size: 8px; line-height: 1.4; text-align: justify;">
-                    ${formatCGVForPDF(data.cgv)}
-                </div>
+            <div style="padding:8mm;page-break-before:always;" class="html2pdf__page-break">
+                <div style="font-size:10px;font-weight:bold;margin-bottom:6px;text-align:center;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:3px;">CONDITIONS GÉNÉRALES DE VENTE</div>
+                <div style="font-size:6px;line-height:1.3;text-align:justify;">${formatCGVForPDF(data.cgv)}</div>
             </div>
-
         </div>
     `;
 
-    const opt = {
-        margin:       10, 
-        filename:     'Devis_' + d.numero + '.pdf',
-        image:        { type: 'jpeg', quality: 1 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: 'css', before: '.html2pdf__page-break' }
-    };
+    html2pdf().set({
+        margin: 0,
+        filename: 'Devis_' + d.numero + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+    }).from(pdfHtml, 'string').toPdf().get('pdf').then(pdf => {
+        while (pdf.internal.getNumberOfPages() > 2) {
+            pdf.deletePage(pdf.internal.getNumberOfPages());
+        }
+        pdf.save('Devis_' + d.numero + '.pdf');
+        if (callback) setTimeout(callback, 500);
+    }).catch(err => {
+        console.error('Erreur PDF devis:', err);
+        alert('Erreur PDF: ' + err.message);
+    });
+}
 
-    html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
-        if (callback) callback();
-    }).catch(err => alert("Erreur lors de la création du PDF : " + err));
-}}// ============================================
+function convertDevisToFacture(numero) {
+    const devis = data.devis.find(d => d.numero === numero);
+    if (devis && confirm('Convertir ce devis en facture ?')) {
+        const facture = JSON.parse(JSON.stringify(devis));
+        facture.numero = generateNumber('F', data.factures);
+        facture.date = new Date().toISOString().split('T')[0];
+        facture.dateEcheance = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+        data.factures.push(facture);
+        saveData();
+        alert('Facture ' + facture.numero + ' créée !');
+        navigateTo('factures');
+    }
+}
+
+function deleteDevis(numero) {
+    if (confirm('Supprimer ce devis ?')) {
+        data.devis = data.devis.filter(d => d.numero !== numero);
+        saveData();
+        renderPage();
+    }
+}
+
+// ============================================
 // PAIEMENTS
 // ============================================
 function renderPaiements() {
@@ -2798,6 +2732,7 @@ function togglePaiement(numero) {
     saveData();
     renderPage();
 }
+
 // ============================================
 // RELANCES
 // ============================================
@@ -3170,9 +3105,11 @@ function renderCA() {
                 }).join('')}
             </div>
 
+            <!-- Graphique à barres -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border">
                 <h3 class="text-lg font-bold text-stone-800 mb-4">📊 Évolution du Chiffre d'Affaires ${caYear}</h3>
                 <div class="relative" style="height: 300px;">
+                    <!-- Lignes de grille horizontales -->
                     <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
                         ${[...Array(6)].map((_, i) => `
                             <div class="flex items-center w-full border-b border-stone-200">
@@ -3180,6 +3117,7 @@ function renderCA() {
                             </div>
                         `).join('')}
                     </div>
+                    <!-- Barres -->
                     <div class="absolute bottom-6 left-16 right-4 top-0 flex items-end justify-around gap-1">
                         ${caParMois.map(m => {
                             const heightPct = maxCA > 0 ? (m.ca / maxCA * 100) : 0;
@@ -3196,6 +3134,7 @@ function renderCA() {
                                 </div>
                             `;
                         }).join('')}
+                        <!-- Barre Total -->
                         <div class="flex flex-col items-center flex-1 ml-4 pl-4 border-l-2 border-stone-300" style="height: 100%;">
                             <div class="flex-1 w-full flex flex-col justify-end items-center">
                                 <span class="text-xs font-bold text-amber-700 mb-1">${totalAnnee.toFixed(2).replace('.', ',')}€</span>
@@ -3280,6 +3219,7 @@ function renderAchats() {
                 </button>
             </div>
             
+            <!-- Sélecteur d'année et Total -->
             <div class="bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-2xl p-6 shadow-lg">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
@@ -3296,6 +3236,7 @@ function renderAchats() {
                 <p class="text-red-100 text-sm mt-1">${data.achats.filter(a => a.date && a.date.startsWith(achatsYear)).length} achat(s) en ${achatsYear}</p>
             </div>
             
+            <!-- Tableau par mois -->
             <div class="bg-white rounded-2xl shadow-lg border overflow-hidden">
                 <div class="p-4 border-b bg-stone-50">
                     <h3 class="font-semibold text-stone-700">📅 Détail par mois - ${achatsYear}</h3>
@@ -3336,6 +3277,7 @@ function renderAchats() {
                 </table>
             </div>
             
+            <!-- Graphique barres -->
             <div class="bg-white rounded-2xl shadow-lg border p-6">
                 <h3 class="font-semibold text-stone-700 mb-4">📊 Évolution des achats ${achatsYear}</h3>
                 <div class="flex items-end gap-2 h-48">
@@ -3353,6 +3295,7 @@ function renderAchats() {
                 </div>
             </div>
             
+            <!-- Liste des derniers achats -->
             <div class="bg-white rounded-2xl shadow-lg border overflow-hidden">
                 <div class="p-4 border-b bg-stone-50 flex justify-between items-center">
                     <h3 class="font-semibold text-stone-700">📋 Derniers achats</h3>
@@ -3587,6 +3530,7 @@ function renderSettings() {
                 <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">🔓 Mode Admin</span>
             </div>
             
+            <!-- Version et Mot de passe Admin -->
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white rounded-2xl shadow-lg p-6 border">
                     <h3 class="font-semibold text-stone-700 mb-3">🔢 Version de l'application</h3>
@@ -3610,6 +3554,7 @@ function renderSettings() {
                 </div>
             </div>
             
+            <!-- Logo -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border">
                 <h3 class="font-semibold text-stone-700 mb-4">🖼️ Logo de l'entreprise</h3>
                 <div class="flex items-center gap-6">
@@ -3625,6 +3570,7 @@ function renderSettings() {
                 </div>
             </div>
 
+            <!-- Entreprise -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border space-y-6">
                 <h3 class="font-semibold text-stone-700 border-b pb-2">🏢 Informations entreprise</h3>
                 <div class="grid grid-cols-2 gap-4">
@@ -3676,6 +3622,7 @@ function renderSettings() {
                 </div>
             </div>
 
+            <!-- CGV -->
             <div class="bg-white rounded-2xl shadow-lg p-6 border">
                 <h3 class="font-semibold text-stone-700 mb-4">📜 Conditions Générales de Vente</h3>
                 <textarea id="cgv-text" rows="15" class="w-full px-4 py-3 border border-stone-300 rounded-xl text-sm">${data.cgv}</textarea>
