@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facturier Styl'Emoi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -2530,133 +2530,305 @@ ${data.entreprise.telephone}`;
     });
 }
 
-function generateFacturePDF(f, client, callback) {
-    const pdfHtml = `
-        <div style="width:794px;font-family:Arial,sans-serif;font-size:11px;background:#fff;">
-            <div style="padding:10mm;">
-                <table style="width:100%;border:none;border-collapse:collapse;margin-bottom:20px;"><tr>
-                    <td style="vertical-align:top;border:none;padding:0;width:55%;">
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px;display:block;"><div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>` : `<div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>`}
-                        <p style="font-size:10px;margin:5px 0">${data.entreprise.complement}<br>${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
-                        <p style="font-size:9px;margin:5px 0">Siret: ${data.entreprise.siret}<br>IBAN: ${data.entreprise.iban}<br>BIC: ${data.entreprise.bic}</p>
-                    </td>
-                    <td style="vertical-align:top;text-align:right;border:none;padding:0;width:45%;">
-                        <div style="color:#f59e0b;margin:0;font-size:24px;font-weight:bold;">FACTURE</div>
-                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${f.numero}</p>
-                        <p style="font-size:10px">Date: ${formatDate(f.date)}<br>Échéance: ${formatDate(f.dateEcheance)}</p>
-                    </td>
-                </tr></table>
-                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
-                    <strong>DESTINATAIRE</strong><br>
-                    ${f.paiementComptoir ? `<span style="color:#d97706;font-weight:bold">Paiement comptoir</span><br><span style="color:#666">Vente directe - Client de passage</span>` : `${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}`}
-                </div>
-                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
-                    <thead><tr style="background:#f5f5f5;">
-                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Réf.</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Description</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Prix HT</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:center;font-size:10px;">Qté</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Total HT</th>
-                    </tr></thead>
-                    <tbody>
-                        ${f.lignes.map(l => `<tr><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.reference}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.description}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT)}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:center;">${l.quantite}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-                <table style="width:220px;margin-left:auto;border:none;border-collapse:collapse;">
-                    <tr style="border:none;"><td style="padding:4px 0;font-size:11px;border:none;">Total HT</td><td style="padding:4px 0;font-size:11px;text-align:right;border:none;">${formatMoney(f.totalHT)}</td></tr>
-                    ${f.remise > 0 ? `<tr style="color:red;border:none;"><td style="padding:4px 0;font-size:11px;border:none;">Remise (${f.remise}%)</td><td style="padding:4px 0;font-size:11px;text-align:right;border:none;">-${formatMoney(f.totalHT * f.remise / 100)}</td></tr>` : ''}
-                    <tr style="border:none;"><td style="padding:4px 0;font-size:13px;font-weight:bold;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">Total TTC</td><td style="padding:4px 0;font-size:13px;font-weight:bold;text-align:right;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">${formatMoney(f.totalTTC)}</td></tr>
-                </table>
-                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:15px;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
-                <p style="margin-top:10px;font-size:10px">Mode de règlement: ${f.modeReglement}</p>
-                <p style="font-size:9px;color:#999;margin-top:20px">Voir conditions générales de vente en page suivante</p>
-            </div>
-            <div style="padding:8mm;page-break-before:always;" class="html2pdf__page-break">
-                <div style="font-size:10px;font-weight:bold;margin-bottom:6px;text-align:center;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:3px;">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div style="font-size:6px;line-height:1.3;text-align:justify;">${formatCGVForPDF(data.cgv)}</div>
-            </div>
-        </div>
-    `;
+// ============================================
+// GÉNÉRATION PDF NATIVE jsPDF (sans html2canvas)
+// Rendu identique au "print to PDF" — aucune page blanche
+// ============================================
 
-    html2pdf().set({
-        margin: 0,
-        filename: 'Facture_' + f.numero + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-    }).from(pdfHtml, 'string').toPdf().get('pdf').then(pdf => {
-        while (pdf.internal.getNumberOfPages() > 2) {
-            pdf.deletePage(pdf.internal.getNumberOfPages());
+function buildDocumentPDF(doc, items, type, numero, client, dateDoc, dateEch, modeReglement, totalHT, totalTTC, remise, paiementComptoir) {
+    const { jsPDF } = window.jspdf;
+    const ent = data.entreprise;
+    const pageW = 210; // mm A4
+    const pageH = 297;
+    const ml = 15; // marge gauche
+    const mr = 15; // marge droite
+    const mt = 15; // marge haut
+    const cw = pageW - ml - mr; // largeur contenu
+    let y = mt;
+
+    // Couleur titre document
+    const colorDoc = (type === 'FACTURE') ? [245, 158, 11] : [59, 130, 246];
+
+    // --- LOGO ---
+    if (data.logo) {
+        try {
+            const logoFormat = data.logo.includes('png') ? 'PNG' : 'JPEG';
+            doc.addImage(data.logo, logoFormat, ml, y, 40, 14);
+            y += 16;
+        } catch(e) {}
+    }
+
+    // --- EN-TÊTE : entreprise à gauche, document à droite ---
+    const headerY = mt;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(30, 30, 30);
+    doc.text(ent.nom, ml, headerY + (data.logo ? 18 : 0));
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(80, 80, 80);
+    let entY = headerY + (data.logo ? 23 : 5);
+    if (ent.complement) { doc.text(ent.complement, ml, entY); entY += 4; }
+    doc.text(ent.adresse, ml, entY); entY += 4;
+    doc.text(ent.codePostal + ' ' + ent.ville, ml, entY); entY += 4;
+    if (ent.telephone) { doc.text('Tél: ' + ent.telephone, ml, entY); entY += 4; }
+    if (ent.email) { doc.text(ent.email, ml, entY); entY += 4; }
+    entY += 2;
+    doc.setFontSize(7.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text('SIRET: ' + ent.siret, ml, entY); entY += 3.5;
+    if (ent.iban) { doc.text('IBAN: ' + ent.iban, ml, entY); entY += 3.5; }
+    if (ent.bic)  { doc.text('BIC: '  + ent.bic,  ml, entY); }
+
+    // Titre document (droite)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...colorDoc);
+    doc.text(type, pageW - mr, headerY + 8, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 30, 30);
+    doc.text(numero, pageW - mr, headerY + 16, { align: 'right' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(80, 80, 80);
+    const labelDate = (type === 'DEVIS') ? 'Validité' : 'Échéance';
+    doc.text('Date: ' + dateDoc,    pageW - mr, headerY + 22, { align: 'right' });
+    doc.text(labelDate + ': ' + dateEch, pageW - mr, headerY + 27, { align: 'right' });
+
+    // Ligne séparatrice
+    y = Math.max(entY, headerY + 30) + 5;
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.3);
+    doc.line(ml, y, pageW - mr, y);
+    y += 5;
+
+    // --- DESTINATAIRE ---
+    doc.setFillColor(245, 245, 245);
+    doc.roundedRect(ml, y, cw, paiementComptoir ? 16 : 20, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text('DESTINATAIRE', ml + 4, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    doc.setFontSize(9);
+    if (paiementComptoir) {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorDoc);
+        doc.text('Paiement comptoir — Vente directe', ml + 4, y + 12);
+    } else {
+        doc.text(client?.nom || '-', ml + 4, y + 11);
+        const addrParts = [client?.adresse, (client?.codePostal || '') + ' ' + (client?.ville || '')].filter(Boolean);
+        doc.setFontSize(8.5);
+        doc.setTextColor(80, 80, 80);
+        doc.text(addrParts.join('  '), ml + 4, y + 16.5);
+    }
+    y += paiementComptoir ? 22 : 26;
+
+    // --- TABLEAU LIGNES ---
+    const colW = { ref: 20, desc: cw - 20 - 25 - 16 - 25, pu: 25, qty: 16, total: 25 };
+    const colX = {
+        ref:   ml,
+        desc:  ml + colW.ref,
+        pu:    ml + colW.ref + colW.desc,
+        qty:   ml + colW.ref + colW.desc + colW.pu,
+        total: ml + colW.ref + colW.desc + colW.pu + colW.qty
+    };
+    const rowH = 7;
+    const headH = 8;
+
+    // En-tête tableau
+    doc.setFillColor(245, 245, 245);
+    doc.rect(ml, y, cw, headH, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    doc.rect(ml, y, cw, headH);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Réf.',        colX.ref   + 2, y + 5.5);
+    doc.text('Description', colX.desc  + 2, y + 5.5);
+    doc.text('Prix HT',     colX.pu    + colW.pu   - 2, y + 5.5, { align: 'right' });
+    doc.text('Qté',         colX.qty   + colW.qty  - 2, y + 5.5, { align: 'right' });
+    doc.text('Total HT',    colX.total + colW.total - 2, y + 5.5, { align: 'right' });
+    y += headH;
+
+    // Lignes
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    items.forEach((l, i) => {
+        if (i % 2 === 1) {
+            doc.setFillColor(252, 252, 252);
+            doc.rect(ml, y, cw, rowH, 'F');
         }
-        pdf.save('Facture_' + f.numero + '.pdf');
-        if (callback) setTimeout(callback, 500);
-    }).catch(err => {
-        console.error('Erreur PDF facture:', err);
-        alert('Erreur PDF: ' + err.message);
+        doc.setDrawColor(220, 220, 220);
+        doc.setLineWidth(0.15);
+        doc.rect(ml, y, cw, rowH);
+        doc.setTextColor(30, 30, 30);
+        // Réf
+        doc.text(String(l.reference || ''), colX.ref + 2, y + 5);
+        // Description (tronquée si trop longue)
+        const descMax = colW.desc - 4;
+        let desc = String(l.description || '');
+        if (doc.getTextWidth(desc) > descMax) {
+            while (doc.getTextWidth(desc + '…') > descMax && desc.length > 0) desc = desc.slice(0, -1);
+            desc += '…';
+        }
+        doc.text(desc, colX.desc + 2, y + 5);
+        doc.text(formatMoney(l.prixHT),           colX.pu    + colW.pu   - 2, y + 5, { align: 'right' });
+        doc.text(String(l.quantite),               colX.qty   + colW.qty  - 2, y + 5, { align: 'right' });
+        doc.text(formatMoney(l.prixHT * l.quantite), colX.total + colW.total - 2, y + 5, { align: 'right' });
+        y += rowH;
+    });
+    y += 4;
+
+    // --- TOTAUX ---
+    const totW = 75;
+    const totX = pageW - mr - totW;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(60, 60, 60);
+    doc.text('Total HT', totX, y + 4);
+    doc.text(formatMoney(totalHT), pageW - mr, y + 4, { align: 'right' });
+    y += 7;
+
+    if (remise > 0) {
+        doc.setTextColor(180, 30, 30);
+        doc.text('Remise (' + remise + '%)', totX, y + 4);
+        doc.text('- ' + formatMoney(totalHT * remise / 100), pageW - mr, y + 4, { align: 'right' });
+        doc.setTextColor(60, 60, 60);
+        y += 7;
+    }
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(50, 50, 50);
+    doc.line(totX, y, pageW - mr, y);
+    y += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text('Total TTC', totX, y + 4);
+    doc.text(formatMoney(totalTTC), pageW - mr, y + 4, { align: 'right' });
+    y += 10;
+
+    // TVA exonéré
+    if (ent.exonereTVA) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text('TVA non applicable, article 293B du CGI', ml, y);
+        y += 5;
+    }
+
+    // Mode règlement (facture uniquement)
+    if (type === 'FACTURE' && modeReglement) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(60, 60, 60);
+        doc.text('Mode de règlement : ' + modeReglement, ml, y);
+        y += 5;
+    }
+
+    // Note bas de page 1
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(160, 160, 160);
+    const noteLabel = (type === 'DEVIS') ? 'Devis valable 30 jours. ' : '';
+    doc.text(noteLabel + 'Conditions générales de vente en page suivante.', ml, pageH - 10);
+
+    // --- PAGE 2 : CGV ---
+    doc.addPage();
+    let cy = mt;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    doc.text('CONDITIONS GÉNÉRALES DE VENTE', pageW / 2, cy, { align: 'center' });
+    cy += 2;
+    doc.setLineWidth(0.4);
+    doc.setDrawColor(50, 50, 50);
+    doc.line(ml, cy, pageW - mr, cy);
+    cy += 5;
+
+    // Découper le CGV en lignes
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(50, 50, 50);
+    const cgvRaw = (data.cgv || '').trim();
+    const cgvLines = cgvRaw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const lineH = 3.5;
+
+    cgvLines.forEach(line => {
+        // Titre Article → gras
+        const isTitle = /^Article\s+\d+/i.test(line);
+        if (isTitle) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+        } else {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+        }
+        // Wrap automatique
+        const wrapped = doc.splitTextToSize(line, cw);
+        wrapped.forEach(wl => {
+            if (cy + lineH > pageH - mt) {
+                doc.addPage();
+                cy = mt;
+            }
+            doc.text(wl, ml, cy);
+            cy += lineH;
+        });
+        if (isTitle) cy += 0.5; // petit espace après titre
     });
 }
 
-function generateDevisPDF(d, client, callback) {
-    const pdfHtml = `
-        <div style="width:794px;font-family:Arial,sans-serif;font-size:11px;background:#fff;">
-            <div style="padding:10mm;">
-                <table style="width:100%;border:none;border-collapse:collapse;margin-bottom:20px;"><tr>
-                    <td style="vertical-align:top;border:none;padding:0;width:55%;">
-                        ${data.logo ? `<img src="${data.logo}" style="max-height:50px;margin-bottom:8px;display:block;"><div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>` : `<div style="font-size:16px;font-weight:bold;margin:0;">${data.entreprise.nom}</div>`}
-                        <p style="font-size:10px;margin:5px 0">${data.entreprise.adresse}<br>${data.entreprise.codePostal} ${data.entreprise.ville}<br>Tél: ${data.entreprise.telephone}</p>
-                    </td>
-                    <td style="vertical-align:top;text-align:right;border:none;padding:0;width:45%;">
-                        <div style="color:#3b82f6;margin:0;font-size:24px;font-weight:bold;">DEVIS</div>
-                        <p style="font-size:14px;font-weight:bold;margin:5px 0">${d.numero}</p>
-                        <p style="font-size:10px">Date: ${formatDate(d.date)}<br>Validité: ${formatDate(d.dateEcheance)}</p>
-                    </td>
-                </tr></table>
-                <div style="background:#f5f5f5;padding:10px;margin-bottom:15px;font-size:10px">
-                    <strong>DESTINATAIRE</strong><br>${client?.nom || '-'}<br>${client?.adresse || ''}<br>${client?.codePostal || ''} ${client?.ville || ''}
-                </div>
-                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
-                    <thead><tr style="background:#f5f5f5;">
-                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Réf.</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:left;font-size:10px;">Description</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Prix HT</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:center;font-size:10px;">Qté</th>
-                        <th style="border:1px solid #ddd;padding:6px;text-align:right;font-size:10px;">Total</th>
-                    </tr></thead>
-                    <tbody>
-                        ${d.lignes.map(l => `<tr><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.reference}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;">${l.description}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT)}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:center;">${l.quantite}</td><td style="border:1px solid #ddd;padding:6px;font-size:10px;text-align:right;">${formatMoney(l.prixHT * l.quantite)}</td></tr>`).join('')}
-                    </tbody>
-                </table>
-                <table style="width:220px;margin-left:auto;border:none;border-collapse:collapse;">
-                    <tr style="border:none;"><td style="padding:8px 0;font-size:13px;font-weight:bold;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">Total TTC</td><td style="padding:8px 0;font-size:13px;font-weight:bold;text-align:right;border-top:2px solid #333;border-bottom:none;border-left:none;border-right:none;">${formatMoney(d.totalTTC)}</td></tr>
-                </table>
-                ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
-                <p style="font-size:9px;color:#999;margin-top:20px">Devis valable 30 jours. Voir CGV en page suivante.</p>
-            </div>
-            <div style="padding:8mm;page-break-before:always;" class="html2pdf__page-break">
-                <div style="font-size:10px;font-weight:bold;margin-bottom:6px;text-align:center;text-transform:uppercase;border-bottom:1px solid #333;padding-bottom:3px;">CONDITIONS GÉNÉRALES DE VENTE</div>
-                <div style="font-size:6px;line-height:1.3;text-align:justify;">${formatCGVForPDF(data.cgv)}</div>
-            </div>
-        </div>
-    `;
+function generateFacturePDF(f, client, callback) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    buildDocumentPDF(
+        doc,
+        f.lignes,
+        'FACTURE',
+        f.numero,
+        client,
+        formatDate(f.date),
+        formatDate(f.dateEcheance),
+        f.modeReglement,
+        f.totalHT,
+        f.totalTTC,
+        f.remise || 0,
+        f.paiementComptoir || false
+    );
+    doc.save('Facture_' + f.numero + '.pdf');
+    if (callback) setTimeout(callback, 300);
+}
 
-    html2pdf().set({
-        margin: 0,
-        filename: 'Devis_' + d.numero + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-    }).from(pdfHtml, 'string').toPdf().get('pdf').then(pdf => {
-        while (pdf.internal.getNumberOfPages() > 2) {
-            pdf.deletePage(pdf.internal.getNumberOfPages());
-        }
-        pdf.save('Devis_' + d.numero + '.pdf');
-        if (callback) setTimeout(callback, 500);
-    }).catch(err => {
-        console.error('Erreur PDF devis:', err);
-        alert('Erreur PDF: ' + err.message);
-    });
+function generateDevisPDF(d, client, callback) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    buildDocumentPDF(
+        doc,
+        d.lignes,
+        'DEVIS',
+        d.numero,
+        client,
+        formatDate(d.date),
+        formatDate(d.dateEcheance),
+        null,
+        d.totalHT,
+        d.totalTTC,
+        d.remise || 0,
+        false
+    );
+    doc.save('Devis_' + d.numero + '.pdf');
+    if (callback) setTimeout(callback, 300);
 }
 
 function convertDevisToFacture(numero) {
