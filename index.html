@@ -1586,8 +1586,10 @@ function openFactureModal(numero = null) {
         modeReglement: data.moyensReglement[0],
         remise: 0, acompte: 0, lignes: [], notes: ''
     };
-    // Migration pour anciennes factures sans paiementComptoir
+    // Migrations de compatibilité : ne modifie pas les anciennes données
     if (currentFacture.paiementComptoir === undefined) currentFacture.paiementComptoir = false;
+    if (currentFacture.acompte === undefined || currentFacture.acompte === null || isNaN(parseFloat(currentFacture.acompte))) currentFacture.acompte = 0;
+    currentFacture.acompte = Math.max(0, parseFloat(currentFacture.acompte) || 0);
     renderFactureModal();
 }
 
@@ -1598,7 +1600,9 @@ function renderFactureModal() {
     
     const totalHT = f.lignes.reduce((sum, l) => sum + (l.prixHT * l.quantite), 0);
     const totalHTRemise = totalHT * (1 - f.remise / 100);
-    const totalTTC = data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2;
+    const totalTTC = f.totalManuelValide ? (parseFloat(f.totalManuelSaisi) || 0) : (data.entreprise.exonereTVA ? totalHTRemise : totalHTRemise * 1.2);
+    const acompte = Math.max(0, Math.min(parseFloat(f.acompte) || 0, totalTTC));
+    const resteAPayer = Math.max(0, totalTTC - acompte);
 
     const content = `
         <div class="space-y-6">
@@ -1730,8 +1734,20 @@ function renderFactureModal() {
                         ` : ''}
                     </div>
                     
+                    ${!isDevis ? `
+                    <div class="flex justify-between items-center text-sm border-t border-stone-300 pt-3 mt-2">
+                        <label for="facture-acompte" class="font-medium text-stone-700">Acompte versé</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="facture-acompte" min="0" max="${totalTTC.toFixed(2)}" step="0.01" value="${acompte ? acompte.toFixed(2) : ''}" placeholder="0,00" onchange="updateAcompte(this.value)" class="w-28 text-right border border-amber-300 rounded px-2 py-1 bg-amber-50">
+                            <span class="text-sm text-stone-500">€</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm text-green-700 font-medium">
+                        <span>Reste à payer</span><span>${formatMoney(resteAPayer)}</span>
+                    </div>
+                    ` : ''}
                     <div class="flex justify-between text-lg font-bold">
-                        <span>Total TTC</span><span class="${isDevis ? 'text-blue-600' : 'text-amber-600'}">${formatMoney(f.totalManuelValide ? f.totalManuelSaisi : totalTTC)}</span>
+                        <span>Total TTC</span><span class="${isDevis ? 'text-blue-600' : 'text-amber-600'}">${formatMoney(totalTTC)}</span>
                     </div>
                 </div>
             </div>
@@ -1838,11 +1854,25 @@ function saveFacture() {
     
     // Utiliser le montant manuel si validé
     if (f.totalManuelValide && f.totalManuelSaisi) {
-        totalTTC = f.totalManuelSaisi;
+        totalTTC = parseFloat(f.totalManuelSaisi) || 0;
         // Pour la compta, totalHT = totalTTC car exonéré de TVA
-        totalHT = f.totalManuelSaisi;
-        totalHTRemise = f.totalManuelSaisi;
+        totalHT = totalTTC;
+        totalHTRemise = totalTTC;
     }
+
+    // Acompte : montant réellement versé, plafonné au total TTC.
+    // Les anciennes factures sans acompte restent compatibles (0 par défaut).
+    const acompteSaisi = parseFloat(f.acompte) || 0;
+    if (acompteSaisi < 0) {
+        alert("Le montant de l'acompte ne peut pas être négatif.");
+        return;
+    }
+    if (acompteSaisi > totalTTC + 0.001) {
+        alert("Le montant de l'acompte ne peut pas dépasser le Total TTC.");
+        return;
+    }
+    f.acompte = Math.round(acompteSaisi * 100) / 100;
+    f.resteAPayer = Math.max(0, Math.round((totalTTC - f.acompte) * 100) / 100);
     
     f.totalHT = totalHT;
     f.totalHTRemise = totalHTRemise;
@@ -1869,6 +1899,12 @@ function toggleMontantManuel(checked) {
         currentFacture.totalManuelSaisi = null;
         currentFacture.totalManuelValide = false;
     }
+    renderFactureModal();
+}
+
+function updateAcompte(value) {
+    const montant = parseFloat(String(value).replace(',', '.'));
+    currentFacture.acompte = isNaN(montant) ? 0 : Math.max(0, montant);
     renderFactureModal();
 }
 
@@ -1969,6 +2005,8 @@ function viewFacture(numero) {
                         <div class="flex justify-between py-1"><span>Total HT</span><span>${formatMoney(f.totalHT)}</span></div>
                         ${f.remise > 0 ? `<div class="flex justify-between py-1 text-red-600"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
                         <div class="flex justify-between py-2 border-t-2 border-stone-300 font-bold text-lg"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
+                        ${Number(f.acompte) > 0 ? `<div class="flex justify-between py-1 text-amber-700 font-medium"><span>Acompte versé</span><span>- ${formatMoney(f.acompte)}</span></div>` : ''}
+                        <div class="flex justify-between py-2 border-t border-stone-200 font-bold text-green-700"><span>Reste à payer</span><span>${formatMoney(Math.max(0, (f.totalTTC || 0) - (f.acompte || 0)))}</span></div>
                     </div>
                 </div>
                 ${data.entreprise.exonereTVA ? '<p class="text-sm text-stone-500 italic mb-4">TVA non applicable, article 293B du CGI</p>' : ''}
@@ -2058,6 +2096,8 @@ function printFactureWithCGV(numero) {
                     <div><span>Total HT</span><span>${formatMoney(f.totalHT)}</span></div>
                     ${f.remise > 0 ? `<div style="color:red"><span>Remise (${f.remise}%)</span><span>-${formatMoney(f.totalHT * f.remise / 100)}</span></div>` : ''}
                     <div class="total-line"><span>Total TTC</span><span>${formatMoney(f.totalTTC)}</span></div>
+                    ${Number(f.acompte) > 0 ? `<div style="color:#b45309;font-weight:bold"><span>Acompte versé</span><span>- ${formatMoney(f.acompte)}</span></div>` : ''}
+                    <div style="border-top:1px solid #ddd;font-weight:bold;color:#15803d"><span>Reste à payer</span><span>${formatMoney(Math.max(0, (f.totalTTC || 0) - (f.acompte || 0)))}</span></div>
                 </div>
                 ${data.entreprise.exonereTVA ? '<p style="font-style:italic;color:#666;margin-top:15px;font-size:10px">TVA non applicable, article 293B du CGI</p>' : ''}
                 <p style="margin-top:10px;font-size:10px">Mode de règlement: ${f.modeReglement}</p>
@@ -2486,7 +2526,9 @@ function sendFactureByEmail(numero) {
 Veuillez trouver en pièce jointe votre facture N° ${f.numero}.
 
 Montant : ${formatMoney(f.totalTTC)} TTC
-Échéance : ${formatDate(f.dateEcheance)}
+${Number(f.acompte) > 0 ? `Acompte versé : ${formatMoney(f.acompte)}
+Reste à payer : ${formatMoney(Math.max(0, f.totalTTC - f.acompte))}
+` : ''}Échéance : ${formatDate(f.dateEcheance)}
 
 Règlement par ${f.modeReglement} :
 IBAN : ${data.entreprise.iban}
@@ -2535,7 +2577,7 @@ ${data.entreprise.telephone}`;
 // Rendu identique au "print to PDF" — aucune page blanche
 // ============================================
 
-function buildDocumentPDF(doc, items, type, numero, client, dateDoc, dateEch, modeReglement, totalHT, totalTTC, remise, paiementComptoir) {
+function buildDocumentPDF(doc, items, type, numero, client, dateDoc, dateEch, modeReglement, totalHT, totalTTC, remise, paiementComptoir, acompte) {
     const { jsPDF } = window.jspdf;
     const ent = data.entreprise;
     const pageW = 210; // mm A4
@@ -2716,7 +2758,33 @@ function buildDocumentPDF(doc, items, type, numero, client, dateDoc, dateEch, mo
     doc.setTextColor(20, 20, 20);
     doc.text('Total TTC', totX, y + 4);
     doc.text(formatMoney(totalTTC), pageW - mr, y + 4, { align: 'right' });
-    y += 10;
+    y += 7;
+
+    const acomptePDF = Math.max(0, Math.min(parseFloat(acompte) || 0, parseFloat(totalTTC) || 0));
+    const restePDF = Math.max(0, (parseFloat(totalTTC) || 0) - acomptePDF);
+    if (type === 'FACTURE' && acomptePDF > 0) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(180, 83, 9);
+        doc.text('Acompte versé', totX, y + 4);
+        doc.text('- ' + formatMoney(acomptePDF), pageW - mr, y + 4, { align: 'right' });
+        y += 7;
+    }
+
+    if (type === 'FACTURE') {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.2);
+        doc.line(totX, y, pageW - mr, y);
+        y += 5;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(21, 128, 61);
+        doc.text('Reste à payer', totX, y + 4);
+        doc.text(formatMoney(restePDF), pageW - mr, y + 4, { align: 'right' });
+        y += 10;
+    } else {
+        y += 3;
+    }
 
     // TVA exonéré
     if (ent.exonereTVA) {
@@ -2804,7 +2872,8 @@ function generateFacturePDF(f, client, callback) {
         f.totalHT,
         f.totalTTC,
         f.remise || 0,
-        f.paiementComptoir || false
+        f.paiementComptoir || false,
+        f.acompte || 0
     );
     doc.save('Facture_' + f.numero + '.pdf');
     if (callback) setTimeout(callback, 300);
